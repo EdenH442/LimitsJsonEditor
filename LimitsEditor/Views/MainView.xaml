@@ -20,13 +20,33 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Margin="0,0,0,16">
-            <TextBlock Text="Limits JSON Editor"
-                       FontSize="28"
-                       FontWeight="SemiBold" />
-            <TextBlock Text="Load and edit sequence test definitions"
-                       Opacity="0.72" />
-        </StackPanel>
+        <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="Limits JSON Editor"
+                           FontSize="28"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Load and edit sequence test definitions"
+                           Opacity="0.72" />
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                    VerticalAlignment="Top"
+                    Padding="14,6"
+                    Command="{Binding ToggleThemeCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="ThemeLightDark"
+                                             Width="18"
+                                             Height="18"
+                                             Margin="0,0,6,0" />
+                    <TextBlock Text="{Binding ThemeToggleButtonText}" />
+                </StackPanel>
+            </Button>
+        </Grid>
 
         <ScrollViewer Grid.Row="1"
                       VerticalScrollBarVisibility="Auto">

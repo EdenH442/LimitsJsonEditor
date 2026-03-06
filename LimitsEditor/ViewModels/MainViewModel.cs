@@ -4,6 +4,7 @@ using LimitsEditor.Commands;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
 using LimitsEditor.Validation;
+using MaterialDesignThemes.Wpf;
 
 namespace LimitsEditor.ViewModels;
 
@@ -14,12 +15,14 @@ public sealed class MainViewModel : BaseViewModel
     private readonly IJsonUpsertService _jsonUpsertService;
     private readonly IFileValidationService _fileValidationService;
     private readonly ITestItemValidator _testItemValidator;
+    private readonly PaletteHelper _paletteHelper;
 
     private string _selectedFilePath = string.Empty;
     private string _statusMessage = "Ready";
     private string _sequenceName = string.Empty;
     private string _testName = string.Empty;
     private TestType _testType = TestType.Single;
+    private bool _isDarkMode;
 
     public MainViewModel(
         IJsonFileService jsonFileService,
@@ -33,6 +36,7 @@ public sealed class MainViewModel : BaseViewModel
         _jsonUpsertService = jsonUpsertService;
         _fileValidationService = fileValidationService;
         _testItemValidator = testItemValidator;
+        _paletteHelper = new PaletteHelper();
 
         CurrentDocument = new LimitaDocument();
         Sequences = new ObservableCollection<Sequence>();
@@ -43,6 +47,9 @@ public sealed class MainViewModel : BaseViewModel
         LoadFileCommand = new RelayCommand(OnLoadFile);
         ApplyChangesCommand = new RelayCommand(OnApplyChanges);
         AddTestValueCommand = new RelayCommand(OnAddTestValue);
+        ToggleThemeCommand = new RelayCommand(OnToggleTheme);
+
+        InitializeThemeState();
     }
 
     public string SelectedFilePath
@@ -75,6 +82,20 @@ public sealed class MainViewModel : BaseViewModel
         set => SetProperty(ref _testType, value);
     }
 
+    public bool IsDarkMode
+    {
+        get => _isDarkMode;
+        private set
+        {
+            if (SetProperty(ref _isDarkMode, value))
+            {
+                OnPropertyChanged(nameof(ThemeToggleButtonText));
+            }
+        }
+    }
+
+    public string ThemeToggleButtonText => IsDarkMode ? "Light Mode" : "Dark Mode";
+
     public LimitaDocument CurrentDocument { get; }
 
     public ObservableCollection<Sequence> Sequences { get; }
@@ -90,6 +111,14 @@ public sealed class MainViewModel : BaseViewModel
     public ICommand ApplyChangesCommand { get; }
 
     public ICommand AddTestValueCommand { get; }
+
+    public ICommand ToggleThemeCommand { get; }
+
+    private void InitializeThemeState()
+    {
+        var theme = _paletteHelper.GetTheme();
+        IsDarkMode = theme.GetBaseTheme() == BaseTheme.Dark;
+    }
 
     private void OnBrowseFile()
     {
@@ -112,5 +141,16 @@ public sealed class MainViewModel : BaseViewModel
     {
         TestValues.Add(new TestValue());
         StatusMessage = $"Added TestValue placeholder item ({TestValues.Count} total).";
+    }
+
+    private void OnToggleTheme()
+    {
+        var theme = _paletteHelper.GetTheme();
+        var enableDarkMode = !IsDarkMode;
+        theme.SetBaseTheme(enableDarkMode ? BaseTheme.Dark : BaseTheme.Light);
+        _paletteHelper.SetTheme(theme);
+
+        IsDarkMode = enableDarkMode;
+        StatusMessage = enableDarkMode ? "Dark mode enabled." : "Light mode enabled.";
     }
 }

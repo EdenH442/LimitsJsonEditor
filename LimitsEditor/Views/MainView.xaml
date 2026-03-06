@@ -191,11 +191,11 @@
                 <materialDesign:Card Grid.Row="3"
                                      Padding="14"
                                      UniformCornerRadius="10">
-                    <DockPanel>
-                        <TextBlock VerticalAlignment="Center"
+                    <StackPanel>
+                        <TextBlock Margin="0,0,0,10"
                                    Opacity="0.82"
                                    Text="{Binding StatusMessage}" />
-                        <Button DockPanel.Dock="Right"
+                        <Button HorizontalAlignment="Right"
                                 Padding="18,7"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Command="{Binding ApplyChangesCommand}">
@@ -207,7 +207,7 @@
                                 <TextBlock Text="Apply" />
                             </StackPanel>
                         </Button>
-                    </DockPanel>
+                    </StackPanel>
                 </materialDesign:Card>
             </Grid>
         </ScrollViewer>

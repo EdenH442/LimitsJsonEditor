@@ -1,0 +1,48 @@
+<Window x:Class="LimitsEditor.Views.MainView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Limits JSON Editor"
+        Height="500"
+        Width="900">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Limits JSON Editor"
+                   FontSize="20"
+                   FontWeight="SemiBold" />
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="0,12,0,12">
+            <Button Content="Load JSON"
+                    Command="{Binding LoadFileCommand}"
+                    Margin="0,0,8,0" />
+            <Button Content="Save JSON"
+                    Command="{Binding SaveFileCommand}"
+                    Margin="0,0,8,0" />
+            <Button Content="Upsert Test"
+                    Command="{Binding UpsertTestCommand}" />
+        </StackPanel>
+
+        <Border Grid.Row="2"
+                BorderBrush="LightGray"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+            <TextBlock Text="TODO: Add sequence/test editor form here (MVVM bindings only)."
+                       Foreground="Gray" />
+        </Border>
+
+        <TextBlock Grid.Row="3"
+                   Margin="0,12,0,0"
+                   Text="{Binding StatusMessage}" />
+    </Grid>
+</Window>

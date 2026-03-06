@@ -4,7 +4,7 @@ namespace LimitsEditor.Services;
 
 public interface IJsonFileService
 {
-    Task<LimitaDocument> LoadAsync(string filePath, CancellationToken cancellationToken = default);
+    Task<JsonLoadResult> LoadAsync(string filePath, CancellationToken cancellationToken = default);
 
-    Task SaveAsync(string filePath, LimitaDocument document, CancellationToken cancellationToken = default);
+    Task<JsonSaveResult> SaveAsync(string filePath, LimitaDocument document, CancellationToken cancellationToken = default);
 }

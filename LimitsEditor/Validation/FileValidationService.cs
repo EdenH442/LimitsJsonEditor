@@ -1,8 +1,10 @@
+using LimitsEditor.Models;
+
 namespace LimitsEditor.Validation;
 
 public sealed class FileValidationService : IFileValidationService
 {
-    public ValidationResult ValidateForLoad(string filePath)
+    public ValidationResult ValidateFileForLoad(string filePath)
     {
         var result = new ValidationResult();
 
@@ -11,11 +13,20 @@ public sealed class FileValidationService : IFileValidationService
         return result;
     }
 
-    public ValidationResult ValidateForSave(string filePath)
+    public ValidationResult ValidateFileForSave(string filePath)
     {
         var result = new ValidationResult();
 
         // TODO: Check save path/write access before persisting edits.
+
+        return result;
+    }
+
+    public ValidationResult ValidateDocumentStructure(LimitaDocument document)
+    {
+        var result = new ValidationResult();
+
+        // TODO: Check schema-specific JSON structure requirements.
 
         return result;
     }

@@ -1,10 +1,10 @@
-using LimitsEditor.Models;
+using LimitsEditor.Services;
 
 namespace LimitsEditor.Validation;
 
 public sealed class TestItemValidator : ITestItemValidator
 {
-    public ValidationResult Validate(TestItem testItem)
+    public ValidationResult Validate(UpsertTestRequest request)
     {
         var result = new ValidationResult();
 

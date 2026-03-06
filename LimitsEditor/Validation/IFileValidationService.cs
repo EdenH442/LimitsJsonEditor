@@ -1,8 +1,12 @@
+using LimitsEditor.Models;
+
 namespace LimitsEditor.Validation;
 
 public interface IFileValidationService
 {
-    ValidationResult ValidateForLoad(string filePath);
+    ValidationResult ValidateFileForLoad(string filePath);
 
-    ValidationResult ValidateForSave(string filePath);
+    ValidationResult ValidateFileForSave(string filePath);
+
+    ValidationResult ValidateDocumentStructure(LimitaDocument document);
 }

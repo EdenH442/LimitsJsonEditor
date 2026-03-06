@@ -2,17 +2,9 @@ using LimitsEditor.Validation;
 
 namespace LimitsEditor.Services;
 
-public sealed class UpsertResult
+public sealed class JsonSaveResult
 {
     public OperationStatus Status { get; init; } = OperationStatus.Failed;
-
-    public bool SequenceCreated { get; init; }
-
-    public bool TestAdded { get; init; }
-
-    public bool TestOverwritten { get; init; }
-
-    public bool RequiresOverwriteConfirmation { get; init; }
 
     public ValidationResult Validation { get; init; } = new();
 

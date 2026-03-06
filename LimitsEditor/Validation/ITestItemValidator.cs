@@ -1,8 +1,8 @@
-using LimitsEditor.Models;
+using LimitsEditor.Services;
 
 namespace LimitsEditor.Validation;
 
 public interface ITestItemValidator
 {
-    ValidationResult Validate(TestItem testItem);
+    ValidationResult Validate(UpsertTestRequest request);
 }

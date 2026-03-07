@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
-using System.Windows.Input;
-using LimitsEditor.Commands;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
 using LimitsEditor.Validation;
@@ -8,7 +8,7 @@ using MaterialDesignThemes.Wpf;
 
 namespace LimitsEditor.ViewModels;
 
-public sealed class MainViewModel : BaseViewModel
+public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IJsonFileService _jsonFileService;
     private readonly IBackupService _backupService;
@@ -17,12 +17,24 @@ public sealed class MainViewModel : BaseViewModel
     private readonly ITestItemValidator _testItemValidator;
     private readonly PaletteHelper _paletteHelper;
 
-    private string _selectedFilePath = string.Empty;
-    private string _statusMessage = "Ready";
-    private string _sequenceName = string.Empty;
-    private string _testName = string.Empty;
-    private TestType _testType = TestType.Single;
-    private bool _isDarkMode;
+    [ObservableProperty]
+    private string selectedFilePath = string.Empty;
+
+    [ObservableProperty]
+    private string statusMessage = "Ready";
+
+    [ObservableProperty]
+    private string sequenceName = string.Empty;
+
+    [ObservableProperty]
+    private string testName = string.Empty;
+
+    [ObservableProperty]
+    private TestType testType = TestType.Single;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ThemeToggleButtonText))]
+    private bool isDarkMode;
 
     public MainViewModel(
         IJsonFileService jsonFileService,
@@ -43,55 +55,7 @@ public sealed class MainViewModel : BaseViewModel
         TestValues = new ObservableCollection<TestValue>();
         AvailableTestTypes = new[] { TestType.Single, TestType.Multiple };
 
-        BrowseFileCommand = new RelayCommand(OnBrowseFile);
-        LoadFileCommand = new RelayCommand(OnLoadFile);
-        ApplyChangesCommand = new RelayCommand(OnApplyChanges);
-        AddTestValueCommand = new RelayCommand(OnAddTestValue);
-        ToggleThemeCommand = new RelayCommand(OnToggleTheme);
-
         InitializeThemeState();
-    }
-
-    public string SelectedFilePath
-    {
-        get => _selectedFilePath;
-        set => SetProperty(ref _selectedFilePath, value);
-    }
-
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set => SetProperty(ref _statusMessage, value);
-    }
-
-    public string SequenceName
-    {
-        get => _sequenceName;
-        set => SetProperty(ref _sequenceName, value);
-    }
-
-    public string TestName
-    {
-        get => _testName;
-        set => SetProperty(ref _testName, value);
-    }
-
-    public TestType TestType
-    {
-        get => _testType;
-        set => SetProperty(ref _testType, value);
-    }
-
-    public bool IsDarkMode
-    {
-        get => _isDarkMode;
-        private set
-        {
-            if (SetProperty(ref _isDarkMode, value))
-            {
-                OnPropertyChanged(nameof(ThemeToggleButtonText));
-            }
-        }
     }
 
     public string ThemeToggleButtonText => IsDarkMode ? "Light Mode" : "Dark Mode";
@@ -104,46 +68,41 @@ public sealed class MainViewModel : BaseViewModel
 
     public IReadOnlyList<TestType> AvailableTestTypes { get; }
 
-    public ICommand BrowseFileCommand { get; }
-
-    public ICommand LoadFileCommand { get; }
-
-    public ICommand ApplyChangesCommand { get; }
-
-    public ICommand AddTestValueCommand { get; }
-
-    public ICommand ToggleThemeCommand { get; }
-
     private void InitializeThemeState()
     {
         var theme = _paletteHelper.GetTheme();
         IsDarkMode = theme.GetBaseTheme() == BaseTheme.Dark;
     }
 
-    private void OnBrowseFile()
+    [RelayCommand]
+    private void BrowseFile()
     {
         StatusMessage = "Browse action placeholder (file dialog not implemented yet).";
     }
 
-    private void OnLoadFile()
+    [RelayCommand]
+    private void LoadFile()
     {
-        // Placeholder only. No file I/O in this task.
+        var _ = (_jsonFileService, _fileValidationService);
         StatusMessage = "Load action placeholder (file loading not implemented yet).";
     }
 
-    private void OnApplyChanges()
+    [RelayCommand]
+    private void ApplyChanges()
     {
-        // Placeholder only. No JSON upsert/save logic in this task.
+        var _ = (_backupService, _jsonUpsertService, _testItemValidator);
         StatusMessage = "Apply action placeholder (upsert/save not implemented yet).";
     }
 
-    private void OnAddTestValue()
+    [RelayCommand]
+    private void AddTestValue()
     {
         TestValues.Add(new TestValue());
         StatusMessage = $"Added TestValue placeholder item ({TestValues.Count} total).";
     }
 
-    private void OnToggleTheme()
+    [RelayCommand]
+    private void ToggleTheme()
     {
         var theme = _paletteHelper.GetTheme();
         var enableDarkMode = !IsDarkMode;

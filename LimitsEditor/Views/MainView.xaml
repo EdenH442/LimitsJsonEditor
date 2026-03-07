@@ -6,217 +6,213 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Limits JSON Editor"
-        Height="640"
-        Width="980"
-        MinHeight="560"
-        MinWidth="820"
+        Height="700"
+        Width="1120"
+        MinHeight="620"
+        MinWidth="920"
         TextElement.FontSize="14"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Background="{DynamicResource MaterialDesignPaper}">
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Margin="0,0,0,16">
+        <materialDesign:Card Padding="18" UniformCornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="Limits JSON Editor" />
+                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="Modern MVVM shell for loading, editing, and applying sequence test limits." />
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        VerticalAlignment="Top"
+                        Padding="14,6"
+                        Command="{Binding ToggleThemeCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ThemeLightDark" Width="18" Height="18" Margin="0,0,6,0" />
+                        <TextBlock Text="{Binding ThemeToggleButtonText}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </materialDesign:Card>
+
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <TextBlock Text="Limits JSON Editor"
-                           FontSize="28"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="Load and edit sequence test definitions"
-                           Opacity="0.72" />
-            </StackPanel>
-
-            <Button Grid.Column="1"
-                    VerticalAlignment="Top"
-                    Padding="14,6"
-                    Command="{Binding ToggleThemeCommand}">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="ThemeLightDark"
-                                             Width="18"
-                                             Height="18"
-                                             Margin="0,0,6,0" />
-                    <TextBlock Text="{Binding ThemeToggleButtonText}" />
-                </StackPanel>
-            </Button>
-        </Grid>
-
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <materialDesign:Card Grid.Row="0"
-                                     Margin="0,0,0,12"
-                                     Padding="16"
-                                     UniformCornerRadius="10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox Grid.Column="0"
-                                 Margin="0,0,10,0"
-                                 materialDesign:HintAssist.Hint="JSON file path"
-                                 materialDesign:TextFieldAssist.HasClearButton="True"
-                                 Text="{Binding SelectedFilePath, UpdateSourceTrigger=PropertyChanged}" />
-
-                        <Button Grid.Column="1"
-                                Margin="0,0,10,0"
-                                Padding="14,6"
-                                Command="{Binding BrowseFileCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FolderSearchOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         Margin="0,0,6,0" />
-                                <TextBlock Text="Browse" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Grid.Column="2"
-                                Padding="14,6"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Command="{Binding LoadFileCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileDownloadOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         Margin="0,0,6,0" />
-                                <TextBlock Text="Load" />
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-                </materialDesign:Card>
-
-                <materialDesign:Card Grid.Row="1"
-                                     Margin="0,0,0,12"
-                                     Padding="16"
-                                     UniformCornerRadius="10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="220" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox Grid.Column="0"
-                                 Margin="0,0,12,0"
-                                 materialDesign:HintAssist.Hint="Sequence Name"
-                                 Text="{Binding SequenceName, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBox Grid.Column="1"
-                                 Margin="0,0,12,0"
-                                 materialDesign:HintAssist.Hint="Test Name"
-                                 Text="{Binding TestName, UpdateSourceTrigger=PropertyChanged}" />
-                        <ComboBox Grid.Column="2"
-                                  materialDesign:HintAssist.Hint="Test Type"
-                                  ItemsSource="{Binding AvailableTestTypes}"
-                                  SelectedItem="{Binding TestType}" />
-                    </Grid>
-                </materialDesign:Card>
-
-                <materialDesign:Card Grid.Row="2"
-                                     Margin="0,0,0,12"
-                                     Padding="16"
-                                     UniformCornerRadius="10">
+            <StackPanel Grid.Column="0">
+                <materialDesign:Card Padding="16" Margin="0,0,0,12" UniformCornerRadius="12">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="File" />
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     Margin="0,0,10,0"
+                                     materialDesign:HintAssist.Hint="JSON file path"
+                                     materialDesign:TextFieldAssist.HasClearButton="True"
+                                     Text="{Binding SelectedFilePath, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <Button Grid.Column="1"
+                                    Margin="0,0,10,0"
+                                    Padding="14,6"
+                                    Command="{Binding BrowseFileCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FolderSearchOutline" Width="18" Height="18" Margin="0,0,6,0" />
+                                    <TextBlock Text="Browse" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Grid.Column="2"
+                                    Padding="14,6"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding LoadFileCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileDownloadOutline" Width="18" Height="18" Margin="0,0,6,0" />
+                                    <TextBlock Text="Load" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="16" Margin="0,0,0,12" UniformCornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Test Target" />
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="220" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     Margin="0,0,12,0"
+                                     materialDesign:HintAssist.Hint="Sequence Name"
+                                     Text="{Binding SequenceName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Grid.Column="1"
+                                     Margin="0,0,12,0"
+                                     materialDesign:HintAssist.Hint="Test Name"
+                                     Text="{Binding TestName, UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox Grid.Column="2"
+                                      materialDesign:HintAssist.Hint="Test Type"
+                                      ItemsSource="{Binding AvailableTestTypes}"
+                                      SelectedItem="{Binding TestType}" />
+                        </Grid>
+                    </Grid>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="16" UniformCornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <DockPanel Margin="0,0,0,10">
-                            <materialDesign:PackIcon DockPanel.Dock="Left"
-                                                     Kind="FormatListBulletedSquare"
-                                                     Width="18"
-                                                     Height="18"
-                                                     Margin="0,0,8,0" />
-                            <TextBlock Text="TestValues"
-                                       FontWeight="SemiBold" />
-                        </DockPanel>
+                        <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Test Values" />
 
-                        <ListBox Grid.Row="1"
-                                 MinHeight="180"
-                                 BorderThickness="0"
-                                 ItemsSource="{Binding TestValues}">
+                        <ListBox Grid.Row="2" MinHeight="210" BorderThickness="0" ItemsSource="{Binding TestValues}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <materialDesign:Card Margin="0,0,0,8"
-                                                         Padding="12"
-                                                         UniformCornerRadius="8"
-                                                         Background="{DynamicResource MaterialDesignPaper}">
+                                    <materialDesign:Card Margin="0,0,0,8" Padding="12" UniformCornerRadius="8">
                                         <StackPanel>
-                                            <TextBlock Text="TestValue item"
-                                                       FontWeight="SemiBold" />
-                                            <TextBlock Text="ResultType / ExpectedResult / Comparison / Min / Max"
-                                                       Opacity="0.65"
-                                                       FontSize="12" />
+                                            <TextBlock Text="TestValue item" FontWeight="SemiBold" />
+                                            <TextBlock FontSize="12" Opacity="0.65" Text="ResultType / ExpectedResult / Comparison / Min / Max" />
                                         </StackPanel>
                                     </materialDesign:Card>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Button Grid.Row="2"
+                        <Button Grid.Row="3"
                                 HorizontalAlignment="Left"
                                 Margin="0,10,0,0"
                                 Padding="14,6"
                                 Command="{Binding AddTestValueCommand}">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="PlusCircleOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         Margin="0,0,6,0" />
+                                <materialDesign:PackIcon Kind="PlusCircleOutline" Width="18" Height="18" Margin="0,0,6,0" />
                                 <TextBlock Text="Add TestValue" />
                             </StackPanel>
                         </Button>
                     </Grid>
                 </materialDesign:Card>
+            </StackPanel>
 
-                <materialDesign:Card Grid.Row="3"
-                                     Padding="14"
-                                     UniformCornerRadius="10">
-                    <StackPanel>
-                        <TextBlock Margin="0,0,0,10"
-                                   Opacity="0.82"
-                                   Text="{Binding StatusMessage}" />
-                        <Button HorizontalAlignment="Right"
-                                Padding="18,7"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Command="{Binding ApplyChangesCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ContentSaveOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         Margin="0,0,6,0" />
-                                <TextBlock Text="Apply" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </materialDesign:Card>
-            </Grid>
-        </ScrollViewer>
+            <materialDesign:Card Grid.Column="2" Padding="16" UniformCornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="2"
+                    <TextBlock Style="{StaticResource SectionTitleStyle}" Text="Session" />
+
+                    <TextBlock Grid.Row="2"
+                               Style="{StaticResource SubtleTextStyle}"
+                               TextWrapping="Wrap"
+                               Text="Use this panel to monitor command feedback while editing values. Hook this into validation and save workflows as implementation progresses." />
+
+                    <materialDesign:Card Grid.Row="3" Margin="0,14,0,14" Padding="12" UniformCornerRadius="8">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="Status" />
+                            <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding StatusMessage}" />
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <Button Grid.Row="4"
+                            HorizontalAlignment="Right"
+                            Padding="18,7"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding ApplyChangesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSaveOutline" Width="18" Height="18" Margin="0,0,6,0" />
+                            <TextBlock Text="Apply Changes" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+
+        <TextBlock Grid.Row="3"
                    Margin="0,12,0,0"
                    HorizontalAlignment="Right"
                    Opacity="0.6"
                    FontSize="12"
-                   Text="MVVM shell · persistence logic pending" />
+                   Text="MVVM Toolkit + DI composition root" />
     </Grid>
 </Window>

@@ -25,12 +25,14 @@ public sealed partial class MainViewModel : ObservableObject
     public MainViewModel(
         AddTabViewModel addTabViewModel,
         FindTabViewModel findTabViewModel,
+        EditTabViewModel editTabViewModel,
         SharedFileContext sharedFileContext,
         IFileValidationService fileValidationService,
         IJsonFileService jsonFileService)
     {
         AddTab = addTabViewModel;
         FindTab = findTabViewModel;
+        EditTab = editTabViewModel;
         _sharedFileContext = sharedFileContext;
         _fileValidationService = fileValidationService;
         _jsonFileService = jsonFileService;
@@ -43,6 +45,14 @@ public sealed partial class MainViewModel : ObservableObject
             }
         };
 
+        EditTab.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(EditTabViewModel.HasEditBuffer) && EditTab.HasEditBuffer)
+            {
+                SelectedTabIndex = 2;
+            }
+        };
+
         _paletteHelper = new PaletteHelper();
         InitializeThemeState();
     }
@@ -50,6 +60,11 @@ public sealed partial class MainViewModel : ObservableObject
     public AddTabViewModel AddTab { get; }
 
     public FindTabViewModel FindTab { get; }
+
+    public EditTabViewModel EditTab { get; }
+
+    [ObservableProperty]
+    private int selectedTabIndex = 1;
 
     public string SelectedFilePath
     {

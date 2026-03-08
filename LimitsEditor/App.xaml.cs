@@ -40,6 +40,7 @@ public partial class App : Application
         services.AddSingleton<ITestItemValidator, TestItemValidator>();
 
         services.AddSingleton<AddTabViewModel>();
+        services.AddSingleton<EditTabViewModel>();
         services.AddSingleton<FindTabViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainView>();

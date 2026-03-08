@@ -9,6 +9,7 @@ namespace LimitsEditor.ViewModels;
 public sealed partial class FindTabViewModel : ObservableObject
 {
     private readonly SharedFileContext _sharedFileContext;
+    private readonly EditTabViewModel _editTabViewModel;
 
     [ObservableProperty]
     private string statusMessage = "Ready";
@@ -22,15 +23,17 @@ public sealed partial class FindTabViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
     [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
+    [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
     private Step? selectedTest;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
     private Limit? selectedLimit;
 
-    public FindTabViewModel(SharedFileContext sharedFileContext)
+    public FindTabViewModel(SharedFileContext sharedFileContext, EditTabViewModel editTabViewModel)
     {
         _sharedFileContext = sharedFileContext;
+        _editTabViewModel = editTabViewModel;
 
         MatchingSequences = new ObservableCollection<Sequence>();
         TestsInSelectedSequence = new ObservableCollection<Step>();
@@ -101,20 +104,42 @@ public sealed partial class FindTabViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanEditLimit))]
-    private void EditLimit(Limit? limit)
+    private void EditLimit()
     {
-        if (limit is null)
+        var limitToEdit = GetCurrentLimitToEdit();
+        if (limitToEdit is null)
         {
             return;
         }
 
-        SelectedLimit = limit;
-        StatusMessage = $"Prepared edit state for limit in test '{SelectedTest?.StepName}'.";
+        var editableClone = EditableLimitViewModel.FromLimit(limitToEdit);
+        _editTabViewModel.BeginEdit(editableClone, $"Editing limit in test '{SelectedTest?.StepName}'.");
+        StatusMessage = "Opened selected limit in Edit tab.";
     }
 
-    private bool CanEditLimit(Limit? limit)
+    private bool CanEditLimit()
     {
-        return limit is not null;
+        return GetCurrentLimitToEdit() is not null;
+    }
+
+    private Limit? GetCurrentLimitToEdit()
+    {
+        if (SelectedTest is null)
+        {
+            return null;
+        }
+
+        if (IsMultipleTestSelected)
+        {
+            return SelectedLimit;
+        }
+
+        if (IsSingleTestSelected)
+        {
+            return SelectedTest.LimitList.FirstOrDefault();
+        }
+
+        return null;
     }
 
     [RelayCommand]

@@ -84,12 +84,15 @@
             </Grid>
         </materialDesign:Card>
 
-        <TabControl Grid.Row="4">
+        <TabControl Grid.Row="4" SelectedIndex="{Binding SelectedTabIndex}">
             <TabItem Header="Add">
                 <views:AddTabView DataContext="{Binding AddTab}" />
             </TabItem>
             <TabItem Header="Find">
                 <views:FindTabView DataContext="{Binding FindTab}" />
+            </TabItem>
+            <TabItem Header="Edit" IsEnabled="{Binding EditTab.HasEditBuffer}">
+                <views:EditTabView DataContext="{Binding EditTab}" />
             </TabItem>
         </TabControl>
 

@@ -1,0 +1,198 @@
+<UserControl x:Class="LimitsEditor.Views.MainEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d">
+    <Grid Margin="8">
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        </Grid.Resources>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.15*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="1.35*" />
+        </Grid.ColumnDefinitions>
+
+        <materialDesign:Card Grid.Column="0" Padding="16" UniformCornerRadius="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Sequences" />
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             materialDesign:HintAssist.Hint="Search sequence"
+                             Text="{Binding SequenceSearchText, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Button Grid.Column="2"
+                            Padding="12,6"
+                            Command="{Binding FindSequenceCommand}"
+                            Content="Find" />
+                </Grid>
+
+                <ListBox Grid.Row="4"
+                         ItemsSource="{Binding MatchingSequences}"
+                         DisplayMemberPath="SeqName"
+                         SelectedItem="{Binding SelectedSequence}" />
+
+                <WrapPanel Grid.Row="6" Orientation="Horizontal">
+                    <Button Margin="0,0,8,0"
+                            Padding="12,6"
+                            Command="{Binding AddSequenceCommand}"
+                            Content="Add Sequence" />
+                    <Button Padding="12,6"
+                            Command="{Binding DeleteSequenceCommand}"
+                            Content="Delete Sequence" />
+                </WrapPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Column="2" Padding="16" UniformCornerRadius="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Tests" />
+
+                <ListBox Grid.Row="2"
+                         ItemsSource="{Binding TestsInSelectedSequence}"
+                         DisplayMemberPath="StepName"
+                         SelectedItem="{Binding SelectedTest}" />
+
+                <WrapPanel Grid.Row="4" Orientation="Horizontal">
+                    <Button Margin="0,0,8,0"
+                            Padding="12,6"
+                            Command="{Binding AddTestCommand}"
+                            Content="Add Test" />
+                    <Button Padding="12,6"
+                            Command="{Binding DeleteTestCommand}"
+                            Content="Delete Test" />
+                </WrapPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Column="4" Padding="16" UniformCornerRadius="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Details" />
+
+                <ListBox Grid.Row="2"
+                         MaxHeight="120"
+                         ItemsSource="{Binding LimitsInSelectedTest}"
+                         SelectedItem="{Binding SelectedLimit}"
+                         Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="0,0,0,4"
+                                       Text="{Binding MultipleStepNameCheck, TargetNullValue='(unnamed)'}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Grid Grid.Row="4" IsEnabled="{Binding HasEditableLimit}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="132" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="Multiple Step"
+                               Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <TextBox Grid.Row="0"
+                             Grid.Column="2"
+                             Text="{Binding EditableLimit.MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
+                             Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Limit Type" />
+                    <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableLimit.LimitType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
+                    <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Threshold Type" />
+                    <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Expected" />
+                    <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Low" />
+                    <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.Low, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                    <TextBlock Grid.Row="12" Grid.Column="0" Text="High" />
+                    <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.High, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                    <TextBlock Grid.Row="14" Grid.Column="0" Text="Unit" />
+                    <TextBox Grid.Row="14" Grid.Column="2" Text="{Binding EditableLimit.Unit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                </Grid>
+
+                <WrapPanel Grid.Row="6" HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Margin="0,0,8,0"
+                            Padding="12,6"
+                            Command="{Binding EditLimitCommand}"
+                            Content="Edit Selected" />
+                    <Button Margin="0,0,8,0"
+                            Padding="12,6"
+                            Command="{Binding CancelEditCommand}"
+                            Content="Cancel" />
+                    <Button Padding="12,6"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding SaveChangesCommand}"
+                            Content="Apply Edit" />
+                </WrapPanel>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

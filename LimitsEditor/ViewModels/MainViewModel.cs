@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LimitsEditor.Models;
 using LimitsEditor.Services;
 using LimitsEditor.Validation;
 using MaterialDesignThemes.Wpf;
@@ -11,9 +10,6 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class MainViewModel : ObservableObject
 {
-    private const int FindTabIndex = 1;
-    private const int EditTabIndex = 2;
-
     private readonly PaletteHelper _paletteHelper;
     private readonly SharedFileContext _sharedFileContext;
     private readonly IFileValidationService _fileValidationService;
@@ -27,33 +23,21 @@ public sealed partial class MainViewModel : ObservableObject
     private string statusMessage = "Ready";
 
     [ObservableProperty]
-    private int selectedTabIndex;
-
-    [ObservableProperty]
-    private bool isEditTabEnabled;
-
-    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveFileCommand))]
     private bool isDocumentDirty;
 
     public MainViewModel(
-        AddTabViewModel addTabViewModel,
-        FindTabViewModel findTabViewModel,
-        EditTabViewModel editTabViewModel,
+        MainEditorViewModel mainEditorViewModel,
         SharedFileContext sharedFileContext,
         IFileValidationService fileValidationService,
         IJsonFileService jsonFileService)
     {
-        AddTab = addTabViewModel;
-        FindTab = findTabViewModel;
-        EditTab = editTabViewModel;
+        MainEditor = mainEditorViewModel;
         _sharedFileContext = sharedFileContext;
         _fileValidationService = fileValidationService;
         _jsonFileService = jsonFileService;
 
-        FindTab.EditRequested = BeginLimitEdit;
-        EditTab.SaveRequested = CompleteEditSave;
-        EditTab.CancelRequested = CompleteEditCancel;
+        MainEditor.DocumentEdited = MarkDocumentDirty;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -68,11 +52,7 @@ public sealed partial class MainViewModel : ObservableObject
         InitializeThemeState();
     }
 
-    public AddTabViewModel AddTab { get; }
-
-    public FindTabViewModel FindTab { get; }
-
-    public EditTabViewModel EditTab { get; }
+    public MainEditorViewModel MainEditor { get; }
 
     public string SelectedFilePath
     {
@@ -88,29 +68,10 @@ public sealed partial class MainViewModel : ObservableObject
         IsDarkMode = theme.GetBaseTheme() == BaseTheme.Dark;
     }
 
-    private void BeginLimitEdit(Limit limit)
-    {
-        EditTab.BeginEdit(limit);
-        IsEditTabEnabled = true;
-        SelectedTabIndex = EditTabIndex;
-    }
-
-    private void CompleteEditSave()
+    private void MarkDocumentDirty()
     {
         IsDocumentDirty = true;
-        FindTab.RefreshSelectedLimitView();
-        EditTab.ClearEdit();
-        IsEditTabEnabled = false;
-        SelectedTabIndex = FindTabIndex;
-        StatusMessage = "Saved in-memory changes for selected limit.";
-    }
-
-    private void CompleteEditCancel()
-    {
-        EditTab.ClearEdit();
-        IsEditTabEnabled = false;
-        SelectedTabIndex = FindTabIndex;
-        StatusMessage = "Canceled edit and discarded unsaved changes.";
+        StatusMessage = "Updated selected details. Save file to persist changes.";
     }
 
     [RelayCommand]
@@ -150,14 +111,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         _sharedFileContext.LoadedDocument = loadResult.Document;
-        EditTab.ClearEdit();
-        IsEditTabEnabled = false;
         IsDocumentDirty = false;
-        if (SelectedTabIndex == EditTabIndex)
-        {
-            SelectedTabIndex = FindTabIndex;
-        }
-
         StatusMessage = $"Opened JSON file with {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s).";
     }
 

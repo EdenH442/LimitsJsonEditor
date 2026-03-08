@@ -20,6 +20,17 @@ public sealed class FileValidationService : IFileValidationService
             return result;
         }
 
+        if (!string.Equals(Path.GetExtension(filePath), ".json", StringComparison.OrdinalIgnoreCase))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = "Please select a JSON file (.json)."
+            });
+
+            return result;
+        }
+
         if (!File.Exists(filePath))
         {
             result.AddIssue(new ValidationIssue

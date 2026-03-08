@@ -85,7 +85,7 @@
 
                         <TextBox Grid.Column="0"
                                  materialDesign:HintAssist.Hint="Search by sequence name"
-                                 Text="{Binding SequenceSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
 
                         <Button Grid.Column="2"
                                 Padding="14,7"
@@ -98,9 +98,9 @@
                     </Grid>
 
                     <Border Grid.Row="2" Style="{StaticResource ListPanelBorderStyle}">
-                        <ListBox ItemsSource="{Binding MatchingSequences}"
+                        <ListBox ItemsSource="{Binding FilteredSequences}"
                                  BorderThickness="0"
-                                 DisplayMemberPath="SeqName"
+                                 DisplayMemberPath="Name"
                                  SelectedItem="{Binding SelectedSequence}" />
                     </Border>
                 </Grid>
@@ -149,9 +149,9 @@
                            Text="Tests are shown for the currently selected sequence." />
 
                 <Border Grid.Row="4" Style="{StaticResource ListPanelBorderStyle}">
-                    <ListBox ItemsSource="{Binding TestsInSelectedSequence}"
+                    <ListBox ItemsSource="{Binding SelectedSequenceTests}"
                              BorderThickness="0"
-                             DisplayMemberPath="StepName"
+                             DisplayMemberPath="Name"
                              SelectedItem="{Binding SelectedTest}" />
                 </Border>
 

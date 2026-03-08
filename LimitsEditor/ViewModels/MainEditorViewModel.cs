@@ -9,23 +9,30 @@ namespace LimitsEditor.ViewModels;
 public sealed partial class MainEditorViewModel : ObservableObject
 {
     private readonly SharedFileContext _sharedFileContext;
+    private readonly EditorFilteringSelectionService _filteringSelectionService;
     private Limit? _targetLimit;
 
     [ObservableProperty]
     private string statusMessage = "Ready";
 
     [ObservableProperty]
-    private string sequenceSearchText = string.Empty;
+    [NotifyCanExecuteChangedFor(nameof(FindSequenceCommand))]
+    private string searchText = string.Empty;
 
     [ObservableProperty]
-    private Sequence? selectedSequence;
+    [NotifyPropertyChangedFor(nameof(HasSelectedSequence))]
+    [NotifyPropertyChangedFor(nameof(CanDeleteSequence))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSequenceCommand))]
+    private SequenceItemViewModel? selectedSequence;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedTest))]
     [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
     [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
+    [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
-    private Step? selectedTest;
+    private TestItemViewModel? selectedTest;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
@@ -37,18 +44,32 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
     private Limit? editableLimit;
 
-    public MainEditorViewModel(SharedFileContext sharedFileContext)
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    private bool isDocumentDirty;
+
+    public MainEditorViewModel(
+        SharedFileContext sharedFileContext,
+        EditorFilteringSelectionService filteringSelectionService)
     {
         _sharedFileContext = sharedFileContext;
+        _filteringSelectionService = filteringSelectionService;
 
-        MatchingSequences = new ObservableCollection<Sequence>();
-        TestsInSelectedSequence = new ObservableCollection<Step>();
+        FilteredSequences = new ObservableCollection<SequenceItemViewModel>();
+        SelectedSequenceTests = new ObservableCollection<TestItemViewModel>();
         LimitsInSelectedTest = new ObservableCollection<Limit>();
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
+            if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
+            {
+                OnPropertyChanged(nameof(CurrentFilePath));
+            }
+
             if (args.PropertyName == nameof(SharedFileContext.LoadedDocument))
             {
+                OnPropertyChanged(nameof(LoadedDocument));
+                IsDocumentDirty = false;
                 ReloadFromSharedDocument();
             }
         };
@@ -56,34 +77,57 @@ public sealed partial class MainEditorViewModel : ObservableObject
         ReloadFromSharedDocument();
     }
 
-    public ObservableCollection<Sequence> MatchingSequences { get; }
+    public ObservableCollection<SequenceItemViewModel> FilteredSequences { get; }
 
-    public ObservableCollection<Step> TestsInSelectedSequence { get; }
+    public ObservableCollection<TestItemViewModel> SelectedSequenceTests { get; }
 
     public ObservableCollection<Limit> LimitsInSelectedTest { get; }
 
-    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public string CurrentFilePath
+    {
+        get => _sharedFileContext.SelectedFilePath;
+        set => _sharedFileContext.SelectedFilePath = value;
+    }
 
-    public bool IsSingleTestSelected => string.Equals(SelectedTest?.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
+    public LimitaDocument LoadedDocument => _sharedFileContext.LoadedDocument;
+
+    public bool HasSelectedSequence => SelectedSequence is not null;
+
+    public bool HasSelectedTest => SelectedTest is not null;
+
+    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, "SINGLE", StringComparison.OrdinalIgnoreCase);
 
     public bool HasEditableLimit => EditableLimit is not null;
 
+    public bool CanDeleteSequence => HasSelectedSequence;
+
+    public bool CanDeleteTest => HasSelectedTest;
+
     public Action? DocumentEdited { get; set; }
 
-    partial void OnSelectedSequenceChanged(Sequence? value)
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplySequenceFilter();
+    }
+
+    partial void OnSelectedSequenceChanged(SequenceItemViewModel? value)
     {
         ResetTestAndLimitSelection();
 
         if (value is null)
         {
+            StatusMessage = "No sequence selected.";
             return;
         }
 
-        ReplaceWith(TestsInSelectedSequence, value.StepList);
-        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SeqName}'.";
+        var tests = _filteringSelectionService.BuildTestsForSequence(value);
+        ReplaceWith(SelectedSequenceTests, tests);
+        StatusMessage = $"Loaded {SelectedSequenceTests.Count} test(s) from sequence '{value.Name}'.";
     }
 
-    partial void OnSelectedTestChanged(Step? value)
+    partial void OnSelectedTestChanged(TestItemViewModel? value)
     {
         LimitsInSelectedTest.Clear();
         SelectedLimit = null;
@@ -91,31 +135,25 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         if (value is null)
         {
+            StatusMessage = HasSelectedSequence ? "No test selected." : StatusMessage;
             return;
         }
 
-        ReplaceWith(LimitsInSelectedTest, value.LimitList);
+        var limits = _filteringSelectionService.BuildLimitsForTest(value);
+        ReplaceWith(LimitsInSelectedTest, limits);
 
         if (IsSingleTestSelected)
         {
-            SelectedLimit = value.LimitList.FirstOrDefault();
+            SelectedLimit = value.Limits.FirstOrDefault();
         }
 
-        StatusMessage = $"Loaded {LimitsInSelectedTest.Count} limit(s) from test '{value.StepName}'.";
+        StatusMessage = $"Loaded {LimitsInSelectedTest.Count} limit(s) from test '{value.Name}'.";
     }
 
     [RelayCommand]
     private void FindSequence()
     {
-        var query = SequenceSearchText.Trim();
-        var matches = string.IsNullOrWhiteSpace(query)
-            ? _sharedFileContext.LoadedDocument.Sequences
-            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SeqName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        ResetAllSelection();
-        ReplaceWith(MatchingSequences, matches);
-
-        StatusMessage = $"Found {MatchingSequences.Count} matching sequence(s).";
+        ApplySequenceFilter();
     }
 
     [RelayCommand]
@@ -130,8 +168,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Delete Sequence placeholder (not implemented yet).";
     }
 
-    private bool CanDeleteSequence() => SelectedSequence is not null;
-
     [RelayCommand]
     private void AddTest()
     {
@@ -143,8 +179,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
     {
         StatusMessage = "Delete Test placeholder (not implemented yet).";
     }
-
-    private bool CanDeleteTest() => SelectedTest is not null;
 
     [RelayCommand(CanExecute = nameof(CanEditLimit))]
     private void EditLimit()
@@ -158,7 +192,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         _targetLimit = targetLimit;
         EditableLimit = CloneLimit(targetLimit);
         SelectedLimit = targetLimit;
-        StatusMessage = $"Editing limit for test '{SelectedTest?.StepName}'.";
+        StatusMessage = $"Editing limit for test '{SelectedTest?.Name}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -172,6 +206,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         CopyLimitValues(EditableLimit, _targetLimit);
         RefreshSelectedLimitView();
         ClearEditState();
+        IsDocumentDirty = true;
         DocumentEdited?.Invoke();
         StatusMessage = "Applied in-memory edits to selected limit.";
     }
@@ -208,7 +243,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         if (IsSingleTestSelected)
         {
-            return SelectedTest.LimitList.FirstOrDefault();
+            return SelectedTest.Limits.FirstOrDefault();
         }
 
         if (IsMultipleTestSelected)
@@ -223,14 +258,24 @@ public sealed partial class MainEditorViewModel : ObservableObject
     {
         ResetAllSelection();
         ClearEditState();
-        ReplaceWith(MatchingSequences, _sharedFileContext.LoadedDocument.Sequences);
+        ApplySequenceFilter();
 
-        StatusMessage = $"Loaded {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s) from current file context.";
+        StatusMessage = $"Loaded {LoadedDocument.Sequences.Count} sequence(s) from current file context.";
+    }
+
+    private void ApplySequenceFilter()
+    {
+        var filteredSequences = _filteringSelectionService.BuildFilteredSequences(LoadedDocument, SearchText);
+
+        ResetAllSelection();
+        ReplaceWith(FilteredSequences, filteredSequences);
+
+        StatusMessage = $"Showing {FilteredSequences.Count} sequence(s).";
     }
 
     private void ResetTestAndLimitSelection()
     {
-        TestsInSelectedSequence.Clear();
+        SelectedSequenceTests.Clear();
         LimitsInSelectedTest.Clear();
         SelectedTest = null;
         SelectedLimit = null;
@@ -238,7 +283,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void ResetAllSelection()
     {
-        MatchingSequences.Clear();
+        FilteredSequences.Clear();
         SelectedSequence = null;
         ResetTestAndLimitSelection();
     }

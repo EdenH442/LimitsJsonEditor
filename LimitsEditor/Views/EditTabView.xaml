@@ -12,6 +12,8 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock FontSize="18" FontWeight="SemiBold" Text="Edit Limit" />
@@ -81,6 +83,19 @@
                              Grid.Column="2"
                              Text="{Binding EditableLimit.Unit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
                 </Grid>
+
+                <StackPanel Grid.Row="4"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                    <Button Margin="0,0,8,0"
+                            Padding="14,6"
+                            Command="{Binding CancelCommand}"
+                            Content="Cancel" />
+                    <Button Padding="14,6"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding SaveChangesCommand}"
+                            Content="Save Changes" />
+                </StackPanel>
             </Grid>
         </materialDesign:Card>
     </Grid>

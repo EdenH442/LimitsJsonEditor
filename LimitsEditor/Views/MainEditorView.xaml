@@ -290,12 +290,6 @@
                 </Border>
 
                 <WrapPanel Grid.Row="8" HorizontalAlignment="Right" Orientation="Horizontal">
-                    <Button Style="{StaticResource SectionActionButtonStyle}" Command="{Binding EditLimitCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="PencilOutline" />
-                            <TextBlock Text="Edit Selected" />
-                        </StackPanel>
-                    </Button>
                     <Button Style="{StaticResource SectionActionButtonStyle}" Command="{Binding CancelEditCommand}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="CloseCircleOutline" />

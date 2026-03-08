@@ -30,20 +30,21 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
     [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
-    [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
+    [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     private TestItemViewModel? selectedTest;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
+    [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     private Limit? selectedLimit;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
+    [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
-    private Limit? editableLimit;
+    private EditableLimitViewModel? editableLimit;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
@@ -102,6 +103,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public bool HasEditableLimit => EditableLimit is not null;
 
+    public bool HasPendingChanges => _targetLimit is not null && EditableLimit is not null && EditableLimit.HasChangesComparedTo(_targetLimit);
+
     public bool CanDeleteSequence => HasSelectedSequence;
 
     public bool CanDeleteTest => HasSelectedTest;
@@ -158,6 +161,30 @@ public sealed partial class MainEditorViewModel : ObservableObject
         SyncEditableFromSelection();
     }
 
+
+    partial void OnEditableLimitChanged(EditableLimitViewModel? oldValue, EditableLimitViewModel? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.PropertyChanged -= OnEditableLimitPropertyChanged;
+        }
+
+        if (newValue is not null)
+        {
+            newValue.PropertyChanged += OnEditableLimitPropertyChanged;
+        }
+
+        SaveChangesCommand.NotifyCanExecuteChanged();
+        CancelEditCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasPendingChanges));
+    }
+
+    private void OnEditableLimitPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        SaveChangesCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasPendingChanges));
+    }
+
     [RelayCommand]
     private void FindSequence()
     {
@@ -188,13 +215,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Delete Test placeholder (not implemented yet).";
     }
 
-    [RelayCommand(CanExecute = nameof(CanEditLimit))]
-    private void EditLimit()
-    {
-        SyncEditableFromSelection();
-        StatusMessage = $"Editing details for test '{SelectedTest?.Name}'.";
-    }
-
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
     private void SaveChanges()
     {
@@ -218,9 +238,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Reverted unsaved changes in details panel.";
     }
 
-    private bool CanEditLimit() => ResolveLimitForEdit() is not null;
-
-    private bool CanSaveChanges() => _targetLimit is not null && EditableLimit is not null;
+    private bool CanSaveChanges() => _targetLimit is not null && EditableLimit is not null && HasPendingChanges;
 
     public void RefreshSelectedLimitView()
     {
@@ -299,13 +317,15 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
 
         _targetLimit = targetLimit;
-        EditableLimit = CloneLimit(targetLimit);
+        EditableLimit = EditableLimitViewModel.FromModel(targetLimit);
+        OnPropertyChanged(nameof(HasPendingChanges));
     }
 
     private void ClearEditState()
     {
         _targetLimit = null;
         EditableLimit = null;
+        OnPropertyChanged(nameof(HasPendingChanges));
     }
 
     private static void ReplaceWith<T>(ObservableCollection<T> target, IEnumerable<T> items)
@@ -317,7 +337,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
     }
 
-    private static void CopyLimitValues(Limit source, Limit destination)
+    private static void CopyLimitValues(EditableLimitViewModel source, Limit destination)
     {
         destination.MultipleStepNameCheck = source.MultipleStepNameCheck;
         destination.LimitType = source.LimitType;
@@ -327,20 +347,5 @@ public sealed partial class MainEditorViewModel : ObservableObject
         destination.Low = source.Low;
         destination.High = source.High;
         destination.Unit = source.Unit;
-    }
-
-    private static Limit CloneLimit(Limit source)
-    {
-        return new Limit
-        {
-            MultipleStepNameCheck = source.MultipleStepNameCheck,
-            LimitType = source.LimitType,
-            ComparisonType = source.ComparisonType,
-            ThresholdType = source.ThresholdType,
-            ExpectedRes = source.ExpectedRes,
-            Low = source.Low,
-            High = source.High,
-            Unit = source.Unit
-        };
     }
 }

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LimitsEditor.Models;
 using LimitsEditor.Services;
 using LimitsEditor.Validation;
 using MaterialDesignThemes.Wpf;
@@ -10,6 +11,9 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class MainViewModel : ObservableObject
 {
+    private const int FindTabIndex = 1;
+    private const int EditTabIndex = 2;
+
     private readonly PaletteHelper _paletteHelper;
     private readonly SharedFileContext _sharedFileContext;
     private readonly IFileValidationService _fileValidationService;
@@ -22,18 +26,28 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string statusMessage = "Ready";
 
+    [ObservableProperty]
+    private int selectedTabIndex;
+
+    [ObservableProperty]
+    private bool isEditTabEnabled;
+
     public MainViewModel(
         AddTabViewModel addTabViewModel,
         FindTabViewModel findTabViewModel,
+        EditTabViewModel editTabViewModel,
         SharedFileContext sharedFileContext,
         IFileValidationService fileValidationService,
         IJsonFileService jsonFileService)
     {
         AddTab = addTabViewModel;
         FindTab = findTabViewModel;
+        EditTab = editTabViewModel;
         _sharedFileContext = sharedFileContext;
         _fileValidationService = fileValidationService;
         _jsonFileService = jsonFileService;
+
+        FindTab.EditRequested = BeginLimitEdit;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -51,6 +65,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public FindTabViewModel FindTab { get; }
 
+    public EditTabViewModel EditTab { get; }
+
     public string SelectedFilePath
     {
         get => _sharedFileContext.SelectedFilePath;
@@ -63,6 +79,13 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var theme = _paletteHelper.GetTheme();
         IsDarkMode = theme.GetBaseTheme() == BaseTheme.Dark;
+    }
+
+    private void BeginLimitEdit(Limit limit)
+    {
+        EditTab.BeginEdit(limit);
+        IsEditTabEnabled = true;
+        SelectedTabIndex = EditTabIndex;
     }
 
     [RelayCommand]
@@ -102,6 +125,13 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         _sharedFileContext.LoadedDocument = loadResult.Document;
+        EditTab.ClearEdit();
+        IsEditTabEnabled = false;
+        if (SelectedTabIndex == EditTabIndex)
+        {
+            SelectedTabIndex = FindTabIndex;
+        }
+
         StatusMessage = $"Opened JSON file with {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s).";
     }
 

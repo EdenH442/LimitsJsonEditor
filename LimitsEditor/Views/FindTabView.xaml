@@ -83,35 +83,111 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="8" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="8" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="6" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <TextBlock FontWeight="SemiBold" Text="Limits" />
 
                     <ListBox Grid.Row="2"
+                             MaxHeight="140"
                              ItemsSource="{Binding LimitsInSelectedTest}"
                              SelectedItem="{Binding SelectedLimit}"
                              Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Margin="0,0,0,6" VerticalAlignment="Center" Text="{Binding MultipleStepNameCheck}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Margin="0,0,0,6"
+                                           VerticalAlignment="Center"
+                                           Text="{Binding MultipleStepNameCheck}"
+                                           TextTrimming="CharacterEllipsis" />
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <Button Grid.Row="4"
-                            HorizontalAlignment="Right"
-                            Padding="10,4"
-                            Command="{Binding EditLimitCommand}"
-                            CommandParameter="{Binding SelectedLimit}"
-                            Content="Edit" />
+                    <Border Grid.Row="4"
+                            Padding="10"
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="8" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="4" FontWeight="SemiBold" Text="Selected Limit" />
-                    <TextBlock Grid.Row="6" TextWrapping="Wrap" Text="{Binding SelectedLimitSummary}" />
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock FontWeight="SemiBold" Text="Limit Details" />
+
+                                <Button Grid.Column="1"
+                                        Padding="10,4"
+                                        Command="{Binding EditLimitCommand}"
+                                        CommandParameter="{Binding SelectedLimit}"
+                                        Content="Edit" />
+                            </Grid>
+
+                            <Grid Grid.Row="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="120" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Text="Multiple Step"
+                                           Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="2"
+                                           Text="{Binding SelectedLimit.MultipleStepNameCheck, TargetNullValue=-}"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Limit Type" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedLimit.LimitType, TargetNullValue=-}" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding SelectedLimit.ComparisonType, TargetNullValue=-}" />
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Threshold" />
+                                <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding SelectedLimit.ThresholdType, TargetNullValue=-}" />
+
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Expected" />
+                                <TextBlock Grid.Row="8" Grid.Column="2" Text="{Binding SelectedLimit.ExpectedRes, TargetNullValue=-}" />
+
+                                <TextBlock Grid.Row="10" Grid.Column="0" Text="Low / High" />
+                                <TextBlock Grid.Row="10" Grid.Column="2">
+                                    <Run Text="{Binding SelectedLimit.Low, TargetNullValue=-}" />
+                                    <Run Text=" / " />
+                                    <Run Text="{Binding SelectedLimit.High, TargetNullValue=-}" />
+                                </TextBlock>
+
+                                <TextBlock Grid.Row="12" Grid.Column="0" Text="Unit" />
+                                <TextBlock Grid.Row="12" Grid.Column="2" Text="{Binding SelectedLimit.Unit, TargetNullValue=-}" />
+                            </Grid>
+                        </Grid>
+                    </Border>
                 </Grid>
             </materialDesign:Card>
         </Grid>

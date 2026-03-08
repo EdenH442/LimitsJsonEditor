@@ -1,9 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LimitsEditor.Models;
 using LimitsEditor.Services;
+using LimitsEditor.Validation;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
+using System.Windows;
 
 namespace LimitsEditor.ViewModels;
 
@@ -11,7 +12,7 @@ public sealed partial class MainViewModel : ObservableObject
 {
     private readonly PaletteHelper _paletteHelper;
     private readonly SharedFileContext _sharedFileContext;
-    private readonly IJsonFileService _jsonFileService;
+    private readonly IFileValidationService _fileValidationService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ThemeToggleButtonText))]
@@ -24,12 +25,12 @@ public sealed partial class MainViewModel : ObservableObject
         AddTabViewModel addTabViewModel,
         FindTabViewModel findTabViewModel,
         SharedFileContext sharedFileContext,
-        IJsonFileService jsonFileService)
+        IFileValidationService fileValidationService)
     {
         AddTab = addTabViewModel;
         FindTab = findTabViewModel;
         _sharedFileContext = sharedFileContext;
-        _jsonFileService = jsonFileService;
+        _fileValidationService = fileValidationService;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -74,31 +75,23 @@ public sealed partial class MainViewModel : ObservableObject
         if (dialog.ShowDialog() == true)
         {
             SelectedFilePath = dialog.FileName;
-            OnPropertyChanged(nameof(SelectedFilePath));
-            StatusMessage = "Selected JSON file path.";
+            OpenFile();
         }
     }
 
     [RelayCommand]
-    private async Task LoadFileAsync()
+    private void OpenFile()
     {
-        var result = await _jsonFileService.LoadAsync(SelectedFilePath);
+        var validation = _fileValidationService.ValidateFileForLoad(SelectedFilePath);
 
-        if (result.Status == OperationStatus.NotFound)
+        if (!validation.IsValid)
         {
-            _sharedFileContext.LoadedDocument = new LimitaDocument();
-            StatusMessage = "File not found. A new document will be created on save.";
+            var message = validation.Issues.FirstOrDefault()?.Message ?? "Unable to open selected file.";
+            MessageBox.Show(message, "Open JSON File", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        if (result.Status != OperationStatus.Success || result.Document is null)
-        {
-            StatusMessage = result.Message;
-            return;
-        }
-
-        _sharedFileContext.LoadedDocument = result.Document;
-        StatusMessage = $"Loaded {result.Document.Sequences.Count} sequence(s).";
+        StatusMessage = "Opened Json File Successfully";
     }
 
     [RelayCommand]

@@ -1,4 +1,5 @@
 using LimitsEditor.Models;
+using System.IO;
 
 namespace LimitsEditor.Validation;
 
@@ -8,7 +9,40 @@ public sealed class FileValidationService : IFileValidationService
     {
         var result = new ValidationResult();
 
-        // TODO: Check file existence and access before load.
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = "Please provide a file path."
+            });
+
+            return result;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = "The selected file does not exist."
+            });
+
+            return result;
+        }
+
+        try
+        {
+            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+        catch (Exception ex)
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = $"The file cannot be opened for reading: {ex.Message}"
+            });
+        }
 
         return result;
     }

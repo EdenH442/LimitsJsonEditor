@@ -22,10 +22,10 @@ public sealed partial class AddTabViewModel : ObservableObject
     private string sequenceName = string.Empty;
 
     [ObservableProperty]
-    private string testName = string.Empty;
+    private string stepName = string.Empty;
 
     [ObservableProperty]
-    private TestType testType = TestType.Single;
+    private string stepType = "SINGLE";
 
     [ObservableProperty]
     private bool overwriteExisting;
@@ -41,8 +41,8 @@ public sealed partial class AddTabViewModel : ObservableObject
         _jsonUpsertService = jsonUpsertService;
         _testItemValidator = testItemValidator;
 
-        TestValues = new ObservableCollection<TestValue> { new() };
-        AvailableTestTypes = new[] { TestType.Single, TestType.Multiple };
+        Limits = new ObservableCollection<Limit> { new() };
+        AvailableStepTypes = new[] { "SINGLE", "MULTIPLE" };
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -53,34 +53,34 @@ public sealed partial class AddTabViewModel : ObservableObject
         };
     }
 
-    public ObservableCollection<TestValue> TestValues { get; }
+    public ObservableCollection<Limit> Limits { get; }
 
-    public IReadOnlyList<TestType> AvailableTestTypes { get; }
+    public IReadOnlyList<string> AvailableStepTypes { get; }
 
     public string SelectedFilePath => _sharedFileContext.SelectedFilePath;
 
     [RelayCommand]
-    private void AddTestValue()
+    private void AddLimit()
     {
-        TestValues.Add(new TestValue());
-        StatusMessage = $"Added TestValue ({TestValues.Count} total).";
+        Limits.Add(new Limit());
+        StatusMessage = $"Added limit ({Limits.Count} total).";
     }
 
     [RelayCommand]
-    private void RemoveTestValue(TestValue? value)
+    private void RemoveLimit(Limit? value)
     {
         if (value is null)
         {
             return;
         }
 
-        TestValues.Remove(value);
-        if (TestValues.Count == 0)
+        Limits.Remove(value);
+        if (Limits.Count == 0)
         {
-            TestValues.Add(new TestValue());
+            Limits.Add(new Limit());
         }
 
-        StatusMessage = "Removed TestValue.";
+        StatusMessage = "Removed limit.";
     }
 
     [RelayCommand]
@@ -95,11 +95,11 @@ public sealed partial class AddTabViewModel : ObservableObject
         var request = new UpsertTestRequest
         {
             SequenceName = SequenceName,
-            TestItem = new TestItem
+            Step = new Step
             {
-                TestName = TestName,
-                TestType = TestType,
-                TestValues = TestValues.ToList()
+                StepName = StepName,
+                StepType = StepType,
+                LimitList = Limits.ToList()
             },
             OverwriteIfExists = OverwriteExisting
         };
@@ -131,7 +131,7 @@ public sealed partial class AddTabViewModel : ObservableObject
             request = new UpsertTestRequest
             {
                 SequenceName = request.SequenceName,
-                TestItem = request.TestItem,
+                Step = request.Step,
                 OverwriteIfExists = true
             };
 

@@ -20,17 +20,17 @@ public sealed partial class FindTabViewModel : ObservableObject
     private Sequence? selectedSequence;
 
     [ObservableProperty]
-    private TestItem? selectedTest;
+    private Step? selectedStep;
 
     [ObservableProperty]
-    private string selectedTestDetails = "Select a test to view details.";
+    private string selectedStepDetails = "Select a step to view details.";
 
     public FindTabViewModel(SharedFileContext sharedFileContext)
     {
         _sharedFileContext = sharedFileContext;
 
         MatchingSequences = new ObservableCollection<Sequence>();
-        TestsInSelectedSequence = new ObservableCollection<TestItem>();
+        StepsInSelectedSequence = new ObservableCollection<Step>();
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -45,70 +45,70 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public ObservableCollection<Sequence> MatchingSequences { get; }
 
-    public ObservableCollection<TestItem> TestsInSelectedSequence { get; }
+    public ObservableCollection<Step> StepsInSelectedSequence { get; }
 
 
     partial void OnSelectedSequenceChanged(Sequence? value)
     {
-        TestsInSelectedSequence.Clear();
-        SelectedTest = null;
+        StepsInSelectedSequence.Clear();
+        SelectedStep = null;
 
         if (value is null)
         {
             return;
         }
 
-        foreach (var test in value.TestItems)
+        foreach (var step in value.StepList)
         {
-            TestsInSelectedSequence.Add(test);
+            StepsInSelectedSequence.Add(step);
         }
 
-        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SequenceName}'.";
+        StatusMessage = $"Loaded {StepsInSelectedSequence.Count} step(s) from sequence '{value.SeqName}'.";
     }
 
-    partial void OnSelectedTestChanged(TestItem? value)
+    partial void OnSelectedStepChanged(Step? value)
     {
         if (value is null)
         {
-            SelectedTestDetails = "Select a test to view details.";
+            SelectedStepDetails = "Select a step to view details.";
             return;
         }
 
         var lines = new List<string>
         {
-            $"Test Name: {value.TestName}",
-            $"Test Type: {value.TestType}",
-            "Values:"
+            $"Step Name: {value.StepName}",
+            $"Step Type: {value.StepType}",
+            "Limits:"
         };
 
-        if (value.TestValues.Count == 0)
+        if (value.LimitList.Count == 0)
         {
             lines.Add("  (none)");
         }
         else
         {
-            for (var i = 0; i < value.TestValues.Count; i++)
+            for (var i = 0; i < value.LimitList.Count; i++)
             {
-                var entry = value.TestValues[i];
-                lines.Add($"  [{i + 1}] ResultType={entry.ResultType}, ExpectedResult={entry.ExpectedResult}, Comparison={entry.Comparison}, Min={entry.Min}, Max={entry.Max}");
+                var entry = value.LimitList[i];
+                lines.Add($"  [{i + 1}] MultipleStepNameCheck={entry.MultipleStepNameCheck}, LimitType={entry.LimitType}, ComparisonType={entry.ComparisonType}, ThresholdType={entry.ThresholdType}, ExpectedRes={entry.ExpectedRes}, Low={entry.Low}, High={entry.High}, Unit={entry.Unit}");
             }
         }
 
-        SelectedTestDetails = string.Join(Environment.NewLine, lines);
+        SelectedStepDetails = string.Join(Environment.NewLine, lines);
     }
 
     [RelayCommand]
     private void FindSequence()
     {
         MatchingSequences.Clear();
-        TestsInSelectedSequence.Clear();
+        StepsInSelectedSequence.Clear();
         SelectedSequence = null;
-        SelectedTest = null;
+        SelectedStep = null;
 
         var query = SequenceSearchText.Trim();
         var matches = string.IsNullOrWhiteSpace(query)
             ? _sharedFileContext.LoadedDocument.Sequences
-            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SequenceName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SeqName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 
         foreach (var sequence in matches)
         {
@@ -121,10 +121,10 @@ public sealed partial class FindTabViewModel : ObservableObject
     private void ReloadFromSharedDocument()
     {
         MatchingSequences.Clear();
-        TestsInSelectedSequence.Clear();
+        StepsInSelectedSequence.Clear();
         SelectedSequence = null;
-        SelectedTest = null;
-        SelectedTestDetails = "Select a test to view details.";
+        SelectedStep = null;
+        SelectedStepDetails = "Select a step to view details.";
 
         foreach (var sequence in _sharedFileContext.LoadedDocument.Sequences)
         {

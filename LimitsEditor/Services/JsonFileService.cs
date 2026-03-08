@@ -1,7 +1,5 @@
 using LimitsEditor.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using System.IO;
 
 namespace LimitsEditor.Services;
 
@@ -11,11 +9,7 @@ public sealed class JsonFileService : IJsonFileService
     {
         MissingMemberHandling = MissingMemberHandling.Ignore,
         NullValueHandling = NullValueHandling.Include,
-        Formatting = Formatting.Indented,
-        Converters = new List<JsonConverter>
-        {
-            new StringEnumConverter(new Newtonsoft.Json.Serialization.SnakeCaseNamingStrategy(), allowIntegerValues: true)
-        }
+        Formatting = Formatting.Indented
     };
 
     public async Task<JsonLoadResult> LoadAsync(string filePath, CancellationToken cancellationToken = default)
@@ -41,12 +35,15 @@ public sealed class JsonFileService : IJsonFileService
         try
         {
             var json = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
-            var document = JsonConvert.DeserializeObject<LimitaDocument>(json, SerializerSettings) ?? new LimitaDocument();
+            var sequences = JsonConvert.DeserializeObject<List<Sequence>>(json, SerializerSettings) ?? new List<Sequence>();
 
             return new JsonLoadResult
             {
                 Status = OperationStatus.Success,
-                Document = document,
+                Document = new LimitaDocument
+                {
+                    Sequences = sequences
+                },
                 Message = "File loaded successfully."
             };
         }
@@ -81,7 +78,7 @@ public sealed class JsonFileService : IJsonFileService
 
         try
         {
-            var json = JsonConvert.SerializeObject(document, SerializerSettings);
+            var json = JsonConvert.SerializeObject(document.Sequences, SerializerSettings);
             await File.WriteAllTextAsync(filePath, json, cancellationToken).ConfigureAwait(false);
 
             return new JsonSaveResult

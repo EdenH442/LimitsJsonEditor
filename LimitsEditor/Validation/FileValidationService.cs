@@ -1,5 +1,4 @@
 using LimitsEditor.Models;
-using System.IO;
 
 namespace LimitsEditor.Validation;
 
@@ -62,7 +61,14 @@ public sealed class FileValidationService : IFileValidationService
     {
         var result = new ValidationResult();
 
-        // TODO: Check save path/write access before persisting edits.
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = "Please provide a file path."
+            });
+        }
 
         return result;
     }
@@ -71,7 +77,31 @@ public sealed class FileValidationService : IFileValidationService
     {
         var result = new ValidationResult();
 
-        // TODO: Check schema-specific JSON structure requirements.
+        for (var i = 0; i < document.Sequences.Count; i++)
+        {
+            var sequence = document.Sequences[i];
+            if (string.IsNullOrWhiteSpace(sequence.SeqName))
+            {
+                result.AddIssue(new ValidationIssue
+                {
+                    Target = $"Sequences[{i}].SeqName",
+                    Message = "Sequence name cannot be empty."
+                });
+            }
+
+            for (var j = 0; j < sequence.StepList.Count; j++)
+            {
+                var step = sequence.StepList[j];
+                if (string.IsNullOrWhiteSpace(step.StepName))
+                {
+                    result.AddIssue(new ValidationIssue
+                    {
+                        Target = $"Sequences[{i}].StepList[{j}].StepName",
+                        Message = "Step name cannot be empty."
+                    });
+                }
+            }
+        }
 
         return result;
     }

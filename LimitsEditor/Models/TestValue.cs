@@ -8,7 +8,7 @@ public sealed class TestValue
 
     public string Comparison { get; set; } = string.Empty;
 
-    public decimal? Min { get; set; }
+    public object? Min { get; set; }
 
-    public decimal? Max { get; set; }
+    public object? Max { get; set; }
 }

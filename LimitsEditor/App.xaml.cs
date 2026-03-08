@@ -32,12 +32,15 @@ public partial class App : Application
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<SharedFileContext>();
         services.AddSingleton<IJsonFileService, JsonFileService>();
         services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<IJsonUpsertService, JsonUpsertService>();
         services.AddSingleton<IFileValidationService, FileValidationService>();
         services.AddSingleton<ITestItemValidator, TestItemValidator>();
 
+        services.AddSingleton<AddTabViewModel>();
+        services.AddSingleton<FindTabViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainView>();
     }

@@ -1,72 +1,59 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
-using LimitsEditor.Validation;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Win32;
 
 namespace LimitsEditor.ViewModels;
 
 public sealed partial class MainViewModel : ObservableObject
 {
-    private readonly IJsonFileService _jsonFileService;
-    private readonly IBackupService _backupService;
-    private readonly IJsonUpsertService _jsonUpsertService;
-    private readonly IFileValidationService _fileValidationService;
-    private readonly ITestItemValidator _testItemValidator;
     private readonly PaletteHelper _paletteHelper;
-
-    [ObservableProperty]
-    private string selectedFilePath = string.Empty;
-
-    [ObservableProperty]
-    private string statusMessage = "Ready";
-
-    [ObservableProperty]
-    private string sequenceName = string.Empty;
-
-    [ObservableProperty]
-    private string testName = string.Empty;
-
-    [ObservableProperty]
-    private TestType testType = TestType.Single;
+    private readonly SharedFileContext _sharedFileContext;
+    private readonly IJsonFileService _jsonFileService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ThemeToggleButtonText))]
     private bool isDarkMode;
 
+    [ObservableProperty]
+    private string statusMessage = "Ready";
+
     public MainViewModel(
-        IJsonFileService jsonFileService,
-        IBackupService backupService,
-        IJsonUpsertService jsonUpsertService,
-        IFileValidationService fileValidationService,
-        ITestItemValidator testItemValidator)
+        AddTabViewModel addTabViewModel,
+        FindTabViewModel findTabViewModel,
+        SharedFileContext sharedFileContext,
+        IJsonFileService jsonFileService)
     {
+        AddTab = addTabViewModel;
+        FindTab = findTabViewModel;
+        _sharedFileContext = sharedFileContext;
         _jsonFileService = jsonFileService;
-        _backupService = backupService;
-        _jsonUpsertService = jsonUpsertService;
-        _fileValidationService = fileValidationService;
-        _testItemValidator = testItemValidator;
+
+        _sharedFileContext.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
+            {
+                OnPropertyChanged(nameof(SelectedFilePath));
+            }
+        };
+
         _paletteHelper = new PaletteHelper();
-
-        CurrentDocument = new LimitaDocument();
-        Sequences = new ObservableCollection<Sequence>();
-        TestValues = new ObservableCollection<TestValue>();
-        AvailableTestTypes = new[] { TestType.Single, TestType.Multiple };
-
         InitializeThemeState();
     }
 
+    public AddTabViewModel AddTab { get; }
+
+    public FindTabViewModel FindTab { get; }
+
+    public string SelectedFilePath
+    {
+        get => _sharedFileContext.SelectedFilePath;
+        set => _sharedFileContext.SelectedFilePath = value;
+    }
+
     public string ThemeToggleButtonText => IsDarkMode ? "Light Mode" : "Dark Mode";
-
-    public LimitaDocument CurrentDocument { get; }
-
-    public ObservableCollection<Sequence> Sequences { get; }
-
-    public ObservableCollection<TestValue> TestValues { get; }
-
-    public IReadOnlyList<TestType> AvailableTestTypes { get; }
 
     private void InitializeThemeState()
     {
@@ -77,28 +64,41 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void BrowseFile()
     {
-        StatusMessage = "Browse action placeholder (file dialog not implemented yet).";
+        var dialog = new OpenFileDialog
+        {
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            CheckFileExists = false,
+            FileName = string.IsNullOrWhiteSpace(SelectedFilePath) ? string.Empty : SelectedFilePath
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            SelectedFilePath = dialog.FileName;
+            OnPropertyChanged(nameof(SelectedFilePath));
+            StatusMessage = "Selected JSON file path.";
+        }
     }
 
     [RelayCommand]
-    private void LoadFile()
+    private async Task LoadFileAsync()
     {
-        var _ = (_jsonFileService, _fileValidationService);
-        StatusMessage = "Load action placeholder (file loading not implemented yet).";
-    }
+        var result = await _jsonFileService.LoadAsync(SelectedFilePath);
 
-    [RelayCommand]
-    private void ApplyChanges()
-    {
-        var _ = (_backupService, _jsonUpsertService, _testItemValidator);
-        StatusMessage = "Apply action placeholder (upsert/save not implemented yet).";
-    }
+        if (result.Status == OperationStatus.NotFound)
+        {
+            _sharedFileContext.LoadedDocument = new LimitaDocument();
+            StatusMessage = "File not found. A new document will be created on save.";
+            return;
+        }
 
-    [RelayCommand]
-    private void AddTestValue()
-    {
-        TestValues.Add(new TestValue());
-        StatusMessage = $"Added TestValue placeholder item ({TestValues.Count} total).";
+        if (result.Status != OperationStatus.Success || result.Document is null)
+        {
+            StatusMessage = result.Message;
+            return;
+        }
+
+        _sharedFileContext.LoadedDocument = result.Document;
+        StatusMessage = $"Loaded {result.Document.Sequences.Count} sequence(s).";
     }
 
     [RelayCommand]
@@ -110,6 +110,5 @@ public sealed partial class MainViewModel : ObservableObject
         _paletteHelper.SetTheme(theme);
 
         IsDarkMode = enableDarkMode;
-        StatusMessage = enableDarkMode ? "Dark mode enabled." : "Light mode enabled.";
     }
 }

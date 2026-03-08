@@ -128,7 +128,6 @@
                                 <Button Grid.Column="1"
                                         Padding="10,4"
                                         Command="{Binding EditLimitCommand}"
-                                        CommandParameter="{Binding SelectedLimit}"
                                         Content="Edit" />
                             </Grid>
 

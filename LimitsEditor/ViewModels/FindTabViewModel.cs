@@ -22,6 +22,7 @@ public sealed partial class FindTabViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
     [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
+    [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
     private Step? selectedTest;
 
     [ObservableProperty]
@@ -53,27 +54,22 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public ObservableCollection<Limit> LimitsInSelectedTest { get; }
 
+    public Action<Limit>? EditRequested { get; set; }
+
     public bool IsMultipleTestSelected => string.Equals(SelectedTest?.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
 
     public bool IsSingleTestSelected => string.Equals(SelectedTest?.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
 
     partial void OnSelectedSequenceChanged(Sequence? value)
     {
-        TestsInSelectedSequence.Clear();
-        LimitsInSelectedTest.Clear();
-        SelectedTest = null;
-        SelectedLimit = null;
+        ResetTestAndLimitSelection();
 
         if (value is null)
         {
             return;
         }
 
-        foreach (var test in value.StepList)
-        {
-            TestsInSelectedSequence.Add(test);
-        }
-
+        ReplaceWith(TestsInSelectedSequence, value.StepList);
         StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SeqName}'.";
     }
 
@@ -87,10 +83,7 @@ public sealed partial class FindTabViewModel : ObservableObject
             return;
         }
 
-        foreach (var limit in value.LimitList)
-        {
-            LimitsInSelectedTest.Add(limit);
-        }
+        ReplaceWith(LimitsInSelectedTest, value.LimitList);
 
         if (IsSingleTestSelected)
         {
@@ -101,59 +94,87 @@ public sealed partial class FindTabViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanEditLimit))]
-    private void EditLimit(Limit? limit)
+    private void EditLimit()
     {
-        if (limit is null)
+        var targetLimit = ResolveLimitForEdit();
+        if (targetLimit is null)
         {
             return;
         }
 
-        SelectedLimit = limit;
+        SelectedLimit = targetLimit;
+        EditRequested?.Invoke(targetLimit);
         StatusMessage = $"Prepared edit state for limit in test '{SelectedTest?.StepName}'.";
     }
 
-    private bool CanEditLimit(Limit? limit)
+    private bool CanEditLimit()
     {
-        return limit is not null;
+        return ResolveLimitForEdit() is not null;
+    }
+
+    private Limit? ResolveLimitForEdit()
+    {
+        if (SelectedTest is null)
+        {
+            return null;
+        }
+
+        if (IsSingleTestSelected)
+        {
+            return SelectedTest.LimitList.FirstOrDefault();
+        }
+
+        if (IsMultipleTestSelected)
+        {
+            return SelectedLimit;
+        }
+
+        return null;
     }
 
     [RelayCommand]
     private void FindSequence()
     {
-        MatchingSequences.Clear();
-        TestsInSelectedSequence.Clear();
-        LimitsInSelectedTest.Clear();
-        SelectedSequence = null;
-        SelectedTest = null;
-        SelectedLimit = null;
-
         var query = SequenceSearchText.Trim();
         var matches = string.IsNullOrWhiteSpace(query)
             ? _sharedFileContext.LoadedDocument.Sequences
             : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SeqName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 
-        foreach (var sequence in matches)
-        {
-            MatchingSequences.Add(sequence);
-        }
+        ResetAllFindState();
+        ReplaceWith(MatchingSequences, matches);
 
         StatusMessage = $"Found {MatchingSequences.Count} matching sequence(s).";
     }
 
     private void ReloadFromSharedDocument()
     {
-        MatchingSequences.Clear();
-        TestsInSelectedSequence.Clear();
-        LimitsInSelectedTest.Clear();
-        SelectedSequence = null;
-        SelectedTest = null;
-        SelectedLimit = null;
-
-        foreach (var sequence in _sharedFileContext.LoadedDocument.Sequences)
-        {
-            MatchingSequences.Add(sequence);
-        }
+        ResetAllFindState();
+        ReplaceWith(MatchingSequences, _sharedFileContext.LoadedDocument.Sequences);
 
         StatusMessage = $"Loaded {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s) from current file context.";
+    }
+
+    private void ResetTestAndLimitSelection()
+    {
+        TestsInSelectedSequence.Clear();
+        LimitsInSelectedTest.Clear();
+        SelectedTest = null;
+        SelectedLimit = null;
+    }
+
+    private void ResetAllFindState()
+    {
+        MatchingSequences.Clear();
+        SelectedSequence = null;
+        ResetTestAndLimitSelection();
+    }
+
+    private static void ReplaceWith<T>(ObservableCollection<T> target, IEnumerable<T> items)
+    {
+        target.Clear();
+        foreach (var item in items)
+        {
+            target.Add(item);
+        }
     }
 }

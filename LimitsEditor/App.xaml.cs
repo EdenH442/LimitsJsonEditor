@@ -41,6 +41,7 @@ public partial class App : Application
 
         services.AddSingleton<AddTabViewModel>();
         services.AddSingleton<FindTabViewModel>();
+        services.AddSingleton<EditTabViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainView>();
     }

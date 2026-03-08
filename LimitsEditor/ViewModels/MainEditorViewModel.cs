@@ -182,6 +182,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     private void OnEditableLimitPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         SaveChangesCommand.NotifyCanExecuteChanged();
+        CancelEditCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(HasPendingChanges));
     }
 
@@ -231,7 +232,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Applied in-memory edits to selected limit.";
     }
 
-    [RelayCommand(CanExecute = nameof(HasEditableLimit))]
+    [RelayCommand(CanExecute = nameof(CanCancelEdit))]
     private void CancelEdit()
     {
         SyncEditableFromSelection();
@@ -239,6 +240,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     }
 
     private bool CanSaveChanges() => _targetLimit is not null && EditableLimit is not null && HasPendingChanges;
+
+    private bool CanCancelEdit() => HasPendingChanges;
 
     public void RefreshSelectedLimitView()
     {

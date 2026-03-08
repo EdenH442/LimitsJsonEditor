@@ -167,17 +167,22 @@ public sealed partial class MainViewModel : ObservableObject
         var pathValidation = _fileValidationService.ValidateFileForSave(SelectedFilePath);
         if (!pathValidation.IsValid)
         {
-            StatusMessage = pathValidation.Issues.FirstOrDefault()?.Message ?? "Unable to save file.";
+            var message = pathValidation.Issues.FirstOrDefault()?.Message ?? "Unable to save file.";
+            StatusMessage = message;
+            MessageBox.Show(message, "Save JSON File", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         var saveResult = await _jsonFileService.SaveAsync(SelectedFilePath, _sharedFileContext.LoadedDocument);
-        StatusMessage = saveResult.Message;
-
         if (saveResult.Status == OperationStatus.Success)
         {
             IsDocumentDirty = false;
+            StatusMessage = saveResult.Message;
+            return;
         }
+
+        StatusMessage = $"Save failed. {saveResult.Message}";
+        MessageBox.Show(saveResult.Message, "Save JSON File", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     private bool CanSaveFile()

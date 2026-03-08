@@ -6,6 +6,9 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d">
     <Grid Margin="8">
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="12" />
@@ -91,39 +94,21 @@
 
                     <ListBox Grid.Row="2"
                              ItemsSource="{Binding LimitsInSelectedTest}"
-                             SelectedItem="{Binding SelectedLimit}">
+                             SelectedItem="{Binding SelectedLimit}"
+                             Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="8" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
-                                        <Run Text="Type: " />
-                                        <Run Text="{Binding LimitType}" />
-                                        <Run Text=", Compare: " />
-                                        <Run Text="{Binding ComparisonType}" />
-                                        <Run Text=", Expected: " />
-                                        <Run Text="{Binding ExpectedRes}" />
-                                        <Run Text=", Range: " />
-                                        <Run Text="{Binding Low}" />
-                                        <Run Text=" - " />
-                                        <Run Text="{Binding High}" />
-                                        <Run Text=" " />
-                                        <Run Text="{Binding Unit}" />
-                                    </TextBlock>
-
-                                    <Button Grid.Column="2"
-                                            Padding="10,4"
-                                            Command="{Binding DataContext.EditLimitCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                            CommandParameter="{Binding}"
-                                            Content="Edit" />
-                                </Grid>
+                                <TextBlock Margin="0,0,0,6" VerticalAlignment="Center" Text="{Binding MultipleStepNameCheck}" TextTrimming="CharacterEllipsis" />
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+
+                    <Button Grid.Row="4"
+                            HorizontalAlignment="Right"
+                            Padding="10,4"
+                            Command="{Binding EditLimitCommand}"
+                            CommandParameter="{Binding SelectedLimit}"
+                            Content="Edit" />
 
                     <TextBlock Grid.Row="4" FontWeight="SemiBold" Text="Selected Limit" />
                     <TextBlock Grid.Row="6" TextWrapping="Wrap" Text="{Binding SelectedLimitSummary}" />

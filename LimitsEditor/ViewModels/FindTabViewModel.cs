@@ -20,6 +20,8 @@ public sealed partial class FindTabViewModel : ObservableObject
     private Sequence? selectedSequence;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
     private Step? selectedTest;
 
     [ObservableProperty]
@@ -52,6 +54,10 @@ public sealed partial class FindTabViewModel : ObservableObject
     public ObservableCollection<Step> TestsInSelectedSequence { get; }
 
     public ObservableCollection<Limit> LimitsInSelectedTest { get; }
+
+    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsSingleTestSelected => string.Equals(SelectedTest?.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
 
     partial void OnSelectedSequenceChanged(Sequence? value)
     {
@@ -88,6 +94,11 @@ public sealed partial class FindTabViewModel : ObservableObject
             LimitsInSelectedTest.Add(limit);
         }
 
+        if (IsSingleTestSelected)
+        {
+            SelectedLimit = value.LimitList.FirstOrDefault();
+        }
+
         StatusMessage = $"Loaded {LimitsInSelectedTest.Count} limit(s) from test '{value.StepName}'.";
     }
 
@@ -95,7 +106,7 @@ public sealed partial class FindTabViewModel : ObservableObject
     {
         SelectedLimitSummary = value is null
             ? "Select a limit to view details."
-            : BuildLimitSummary(value);
+            : BuildLimitSummary(value, IsMultipleTestSelected);
     }
 
     [RelayCommand]
@@ -151,9 +162,12 @@ public sealed partial class FindTabViewModel : ObservableObject
         StatusMessage = $"Loaded {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s) from current file context.";
     }
 
-    private static string BuildLimitSummary(Limit limit)
+    private static string BuildLimitSummary(Limit limit, bool includeMultipleStepName)
     {
-        return $"LimitType={limit.LimitType}, Comparison={limit.ComparisonType}, Expected={limit.ExpectedRes}, Low={ToDisplay(limit.Low)}, High={ToDisplay(limit.High)}, Unit={ToDisplay(limit.Unit)}";
+        var baseSummary = $"LimitType={limit.LimitType}, Comparison={limit.ComparisonType}, ThresholdType={ToDisplay(limit.ThresholdType)}, Expected={ToDisplay(limit.ExpectedRes)}, Low={ToDisplay(limit.Low)}, High={ToDisplay(limit.High)}, Unit={ToDisplay(limit.Unit)}";
+        return includeMultipleStepName
+            ? $"MultipleStepNameCheck={ToDisplay(limit.MultipleStepNameCheck)}, {baseSummary}"
+            : baseSummary;
     }
 
     private static string ToDisplay(double? value)

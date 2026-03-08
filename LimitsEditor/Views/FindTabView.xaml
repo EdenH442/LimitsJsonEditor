@@ -40,7 +40,7 @@
                 <ColumnDefinition Width="10" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="1.5*" />
+                <ColumnDefinition Width="1.7*" />
             </Grid.ColumnDefinitions>
 
             <materialDesign:Card Grid.Column="0" Padding="12" UniformCornerRadius="10">
@@ -67,11 +67,11 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock FontWeight="SemiBold" Text="Steps" />
+                    <TextBlock FontWeight="SemiBold" Text="Tests" />
                     <ListBox Grid.Row="2"
-                             ItemsSource="{Binding StepsInSelectedSequence}"
+                             ItemsSource="{Binding TestsInSelectedSequence}"
                              DisplayMemberPath="StepName"
-                             SelectedItem="{Binding SelectedStep}" />
+                             SelectedItem="{Binding SelectedTest}" />
                 </Grid>
             </materialDesign:Card>
 
@@ -81,15 +81,52 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="8" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock FontWeight="SemiBold" Text="Selected Step Details" />
-                    <TextBox Grid.Row="2"
-                             IsReadOnly="True"
-                             AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Auto"
-                             Text="{Binding SelectedStepDetails}" />
+                    <TextBlock FontWeight="SemiBold" Text="Limits" />
+
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding LimitsInSelectedTest}"
+                             SelectedItem="{Binding SelectedLimit}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                        <Run Text="Type: " />
+                                        <Run Text="{Binding LimitType}" />
+                                        <Run Text=", Compare: " />
+                                        <Run Text="{Binding ComparisonType}" />
+                                        <Run Text=", Expected: " />
+                                        <Run Text="{Binding ExpectedRes}" />
+                                        <Run Text=", Range: " />
+                                        <Run Text="{Binding Low}" />
+                                        <Run Text=" - " />
+                                        <Run Text="{Binding High}" />
+                                        <Run Text=" " />
+                                        <Run Text="{Binding Unit}" />
+                                    </TextBlock>
+
+                                    <Button Grid.Column="2"
+                                            Padding="10,4"
+                                            Command="{Binding DataContext.EditLimitCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}"
+                                            Content="Edit" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Grid.Row="4" FontWeight="SemiBold" Text="Selected Limit" />
+                    <TextBlock Grid.Row="6" TextWrapping="Wrap" Text="{Binding SelectedLimitSummary}" />
                 </Grid>
             </materialDesign:Card>
         </Grid>

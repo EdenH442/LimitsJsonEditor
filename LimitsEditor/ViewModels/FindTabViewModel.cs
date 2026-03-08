@@ -20,17 +20,21 @@ public sealed partial class FindTabViewModel : ObservableObject
     private Sequence? selectedSequence;
 
     [ObservableProperty]
-    private Step? selectedStep;
+    private Step? selectedTest;
 
     [ObservableProperty]
-    private string selectedStepDetails = "Select a step to view details.";
+    private Limit? selectedLimit;
+
+    [ObservableProperty]
+    private string selectedLimitSummary = "Select a limit to view details.";
 
     public FindTabViewModel(SharedFileContext sharedFileContext)
     {
         _sharedFileContext = sharedFileContext;
 
         MatchingSequences = new ObservableCollection<Sequence>();
-        StepsInSelectedSequence = new ObservableCollection<Step>();
+        TestsInSelectedSequence = new ObservableCollection<Step>();
+        LimitsInSelectedTest = new ObservableCollection<Limit>();
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -45,65 +49,76 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public ObservableCollection<Sequence> MatchingSequences { get; }
 
-    public ObservableCollection<Step> StepsInSelectedSequence { get; }
+    public ObservableCollection<Step> TestsInSelectedSequence { get; }
 
+    public ObservableCollection<Limit> LimitsInSelectedTest { get; }
 
     partial void OnSelectedSequenceChanged(Sequence? value)
     {
-        StepsInSelectedSequence.Clear();
-        SelectedStep = null;
+        TestsInSelectedSequence.Clear();
+        LimitsInSelectedTest.Clear();
+        SelectedTest = null;
+        SelectedLimit = null;
 
         if (value is null)
         {
             return;
         }
 
-        foreach (var step in value.StepList)
+        foreach (var test in value.StepList)
         {
-            StepsInSelectedSequence.Add(step);
+            TestsInSelectedSequence.Add(test);
         }
 
-        StatusMessage = $"Loaded {StepsInSelectedSequence.Count} step(s) from sequence '{value.SeqName}'.";
+        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SeqName}'.";
     }
 
-    partial void OnSelectedStepChanged(Step? value)
+    partial void OnSelectedTestChanged(Step? value)
     {
+        LimitsInSelectedTest.Clear();
+        SelectedLimit = null;
+
         if (value is null)
         {
-            SelectedStepDetails = "Select a step to view details.";
             return;
         }
 
-        var lines = new List<string>
+        foreach (var limit in value.LimitList)
         {
-            $"Step Name: {value.StepName}",
-            $"Step Type: {value.StepType}",
-            "Limits:"
-        };
-
-        if (value.LimitList.Count == 0)
-        {
-            lines.Add("  (none)");
-        }
-        else
-        {
-            for (var i = 0; i < value.LimitList.Count; i++)
-            {
-                var entry = value.LimitList[i];
-                lines.Add($"  [{i + 1}] MultipleStepNameCheck={entry.MultipleStepNameCheck}, LimitType={entry.LimitType}, ComparisonType={entry.ComparisonType}, ThresholdType={entry.ThresholdType}, ExpectedRes={entry.ExpectedRes}, Low={entry.Low}, High={entry.High}, Unit={entry.Unit}");
-            }
+            LimitsInSelectedTest.Add(limit);
         }
 
-        SelectedStepDetails = string.Join(Environment.NewLine, lines);
+        StatusMessage = $"Loaded {LimitsInSelectedTest.Count} limit(s) from test '{value.StepName}'.";
+    }
+
+    partial void OnSelectedLimitChanged(Limit? value)
+    {
+        SelectedLimitSummary = value is null
+            ? "Select a limit to view details."
+            : BuildLimitSummary(value);
+    }
+
+    [RelayCommand]
+    private void EditLimit(Limit? limit)
+    {
+        if (limit is null)
+        {
+            return;
+        }
+
+        SelectedLimit = limit;
+        StatusMessage = $"Prepared edit state for limit in test '{SelectedTest?.StepName}'.";
     }
 
     [RelayCommand]
     private void FindSequence()
     {
         MatchingSequences.Clear();
-        StepsInSelectedSequence.Clear();
+        TestsInSelectedSequence.Clear();
+        LimitsInSelectedTest.Clear();
         SelectedSequence = null;
-        SelectedStep = null;
+        SelectedTest = null;
+        SelectedLimit = null;
 
         var query = SequenceSearchText.Trim();
         var matches = string.IsNullOrWhiteSpace(query)
@@ -121,10 +136,12 @@ public sealed partial class FindTabViewModel : ObservableObject
     private void ReloadFromSharedDocument()
     {
         MatchingSequences.Clear();
-        StepsInSelectedSequence.Clear();
+        TestsInSelectedSequence.Clear();
+        LimitsInSelectedTest.Clear();
         SelectedSequence = null;
-        SelectedStep = null;
-        SelectedStepDetails = "Select a step to view details.";
+        SelectedTest = null;
+        SelectedLimit = null;
+        SelectedLimitSummary = "Select a limit to view details.";
 
         foreach (var sequence in _sharedFileContext.LoadedDocument.Sequences)
         {
@@ -132,5 +149,20 @@ public sealed partial class FindTabViewModel : ObservableObject
         }
 
         StatusMessage = $"Loaded {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s) from current file context.";
+    }
+
+    private static string BuildLimitSummary(Limit limit)
+    {
+        return $"LimitType={limit.LimitType}, Comparison={limit.ComparisonType}, Expected={limit.ExpectedRes}, Low={ToDisplay(limit.Low)}, High={ToDisplay(limit.High)}, Unit={ToDisplay(limit.Unit)}";
+    }
+
+    private static string ToDisplay(double? value)
+    {
+        return value?.ToString() ?? "-";
+    }
+
+    private static string ToDisplay(string value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "-" : value;
     }
 }

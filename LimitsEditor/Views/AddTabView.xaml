@@ -29,13 +29,13 @@
 
                 <TextBox Grid.Column="1"
                          Margin="0,0,12,0"
-                         materialDesign:HintAssist.Hint="Test Name"
-                         Text="{Binding TestName, UpdateSourceTrigger=PropertyChanged}" />
+                         materialDesign:HintAssist.Hint="Step Name"
+                         Text="{Binding StepName, UpdateSourceTrigger=PropertyChanged}" />
 
                 <ComboBox Grid.Column="2"
-                          materialDesign:HintAssist.Hint="Test Type"
-                          ItemsSource="{Binding AvailableTestTypes}"
-                          SelectedItem="{Binding TestType}" />
+                          materialDesign:HintAssist.Hint="Step Type"
+                          ItemsSource="{Binding AvailableStepTypes}"
+                          SelectedItem="{Binding StepType}" />
             </Grid>
         </materialDesign:Card>
 
@@ -46,7 +46,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <ListBox BorderThickness="0" ItemsSource="{Binding TestValues}">
+                <ListBox BorderThickness="0" ItemsSource="{Binding Limits}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <materialDesign:Card Margin="0,0,0,8" Padding="10" UniformCornerRadius="8">
@@ -60,14 +60,14 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBox Grid.Column="0" Margin="0,0,8,0" materialDesign:HintAssist.Hint="ResultType" Text="{Binding ResultType, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="1" Margin="0,0,8,0" materialDesign:HintAssist.Hint="ExpectedResult" Text="{Binding ExpectedResult, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="2" Margin="0,0,8,0" materialDesign:HintAssist.Hint="Comparison" Text="{Binding Comparison, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="3" Margin="0,0,8,0" materialDesign:HintAssist.Hint="Min" Text="{Binding Min, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="4" Margin="0,0,8,0" materialDesign:HintAssist.Hint="Max" Text="{Binding Max, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Grid.Column="0" Margin="0,0,8,0" materialDesign:HintAssist.Hint="MultipleStepNameCheck" Text="{Binding MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Grid.Column="1" Margin="0,0,8,0" materialDesign:HintAssist.Hint="LimitType" Text="{Binding LimitType, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Grid.Column="2" Margin="0,0,8,0" materialDesign:HintAssist.Hint="ComparisonType" Text="{Binding ComparisonType, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Grid.Column="3" Margin="0,0,8,0" materialDesign:HintAssist.Hint="Low" Text="{Binding Low, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Grid.Column="4" Margin="0,0,8,0" materialDesign:HintAssist.Hint="High" Text="{Binding High, UpdateSourceTrigger=PropertyChanged}" />
                                     <Button Grid.Column="5"
                                             Padding="8,4"
-                                            Command="{Binding DataContext.RemoveTestValueCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            Command="{Binding DataContext.RemoveLimitCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                             CommandParameter="{Binding}">
                                         <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" />
                                     </Button>
@@ -81,14 +81,14 @@
                     <CheckBox Margin="0,0,18,0"
                               VerticalAlignment="Center"
                               IsChecked="{Binding OverwriteExisting}"
-                              Content="Overwrite existing test" />
+                              Content="Overwrite existing step" />
 
                     <Button Margin="0,0,10,0"
                             Padding="14,6"
-                            Command="{Binding AddTestValueCommand}">
+                            Command="{Binding AddLimitCommand}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="PlusCircleOutline" Width="18" Height="18" Margin="0,0,6,0" />
-                            <TextBlock Text="Add Value" />
+                            <TextBlock Text="Add Limit" />
                         </StackPanel>
                     </Button>
 

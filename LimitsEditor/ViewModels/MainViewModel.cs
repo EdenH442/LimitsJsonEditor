@@ -13,6 +13,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly PaletteHelper _paletteHelper;
     private readonly SharedFileContext _sharedFileContext;
     private readonly IFileValidationService _fileValidationService;
+    private readonly IJsonFileService _jsonFileService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ThemeToggleButtonText))]
@@ -25,12 +26,14 @@ public sealed partial class MainViewModel : ObservableObject
         AddTabViewModel addTabViewModel,
         FindTabViewModel findTabViewModel,
         SharedFileContext sharedFileContext,
-        IFileValidationService fileValidationService)
+        IFileValidationService fileValidationService,
+        IJsonFileService jsonFileService)
     {
         AddTab = addTabViewModel;
         FindTab = findTabViewModel;
         _sharedFileContext = sharedFileContext;
         _fileValidationService = fileValidationService;
+        _jsonFileService = jsonFileService;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -75,12 +78,12 @@ public sealed partial class MainViewModel : ObservableObject
         if (dialog.ShowDialog() == true)
         {
             SelectedFilePath = dialog.FileName;
-            OpenFile();
+            OpenFileCommand.Execute(null);
         }
     }
 
     [RelayCommand]
-    private void OpenFile()
+    private async Task OpenFileAsync()
     {
         var validation = _fileValidationService.ValidateFileForLoad(SelectedFilePath);
 
@@ -91,7 +94,15 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        StatusMessage = "Opened Json File Successfully";
+        var loadResult = await _jsonFileService.LoadAsync(SelectedFilePath);
+        if (loadResult.Status != OperationStatus.Success || loadResult.Document is null)
+        {
+            StatusMessage = loadResult.Message;
+            return;
+        }
+
+        _sharedFileContext.LoadedDocument = loadResult.Document;
+        StatusMessage = $"Opened JSON file with {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s).";
     }
 
     [RelayCommand]

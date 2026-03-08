@@ -6,7 +6,7 @@ public sealed class UpsertTestRequest
 {
     public string SequenceName { get; init; } = string.Empty;
 
-    public TestItem TestItem { get; init; } = new();
+    public Step Step { get; init; } = new();
 
     public bool OverwriteIfExists { get; init; }
 }

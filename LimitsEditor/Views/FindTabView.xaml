@@ -54,7 +54,7 @@
                     <TextBlock FontWeight="SemiBold" Text="Sequences" />
                     <ListBox Grid.Row="2"
                              ItemsSource="{Binding MatchingSequences}"
-                             DisplayMemberPath="SequenceName"
+                             DisplayMemberPath="SeqName"
                              SelectedItem="{Binding SelectedSequence}" />
                 </Grid>
             </materialDesign:Card>
@@ -67,11 +67,11 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock FontWeight="SemiBold" Text="Tests" />
+                    <TextBlock FontWeight="SemiBold" Text="Steps" />
                     <ListBox Grid.Row="2"
-                             ItemsSource="{Binding TestsInSelectedSequence}"
-                             DisplayMemberPath="TestName"
-                             SelectedItem="{Binding SelectedTest}" />
+                             ItemsSource="{Binding StepsInSelectedSequence}"
+                             DisplayMemberPath="StepName"
+                             SelectedItem="{Binding SelectedStep}" />
                 </Grid>
             </materialDesign:Card>
 
@@ -83,13 +83,13 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock FontWeight="SemiBold" Text="Selected Test Details" />
+                    <TextBlock FontWeight="SemiBold" Text="Selected Step Details" />
                     <TextBox Grid.Row="2"
                              IsReadOnly="True"
                              AcceptsReturn="True"
                              VerticalScrollBarVisibility="Auto"
                              HorizontalScrollBarVisibility="Auto"
-                             Text="{Binding SelectedTestDetails}" />
+                             Text="{Binding SelectedStepDetails}" />
                 </Grid>
             </materialDesign:Card>
         </Grid>

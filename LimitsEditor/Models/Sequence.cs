@@ -1,8 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace LimitsEditor.Models;
 
 public sealed class Sequence
 {
-    public string SequenceName { get; set; } = string.Empty;
+    [JsonPropertyName("seqName")]
+    public string SeqName { get; set; } = string.Empty;
 
-    public List<TestItem> TestItems { get; set; } = new();
+    [JsonPropertyName("stepList")]
+    public List<Step> StepList { get; set; } = new();
 }

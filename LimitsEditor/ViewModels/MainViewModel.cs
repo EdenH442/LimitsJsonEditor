@@ -33,6 +33,7 @@ public sealed partial class MainViewModel : ObservableObject
     private bool isEditTabEnabled;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveFileCommand))]
     private bool isDocumentDirty;
 
     public MainViewModel(
@@ -59,6 +60,7 @@ public sealed partial class MainViewModel : ObservableObject
             if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
             {
                 OnPropertyChanged(nameof(SelectedFilePath));
+                SaveFileCommand.NotifyCanExecuteChanged();
             }
         };
 
@@ -157,6 +159,32 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         StatusMessage = $"Opened JSON file with {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s).";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveFile))]
+    private async Task SaveFileAsync()
+    {
+        var pathValidation = _fileValidationService.ValidateFileForSave(SelectedFilePath);
+        if (!pathValidation.IsValid)
+        {
+            StatusMessage = pathValidation.Issues.FirstOrDefault()?.Message ?? "Unable to save file.";
+            return;
+        }
+
+        var saveResult = await _jsonFileService.SaveAsync(SelectedFilePath, _sharedFileContext.LoadedDocument);
+        StatusMessage = saveResult.Message;
+
+        if (saveResult.Status == OperationStatus.Success)
+        {
+            IsDocumentDirty = false;
+        }
+    }
+
+    private bool CanSaveFile()
+    {
+        return IsDocumentDirty &&
+            !string.IsNullOrWhiteSpace(SelectedFilePath) &&
+            _sharedFileContext.LoadedDocument is not null;
     }
 
     [RelayCommand]

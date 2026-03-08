@@ -22,10 +22,6 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string statusMessage = "Ready";
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SaveFileCommand))]
-    private bool isDocumentDirty;
-
     public MainViewModel(
         MainEditorViewModel mainEditorViewModel,
         SharedFileContext sharedFileContext,
@@ -38,12 +34,16 @@ public sealed partial class MainViewModel : ObservableObject
         _jsonFileService = jsonFileService;
 
         MainEditor.DocumentEdited = MarkDocumentDirty;
-
-        _sharedFileContext.PropertyChanged += (_, args) =>
+        MainEditor.PropertyChanged += (_, args) =>
         {
-            if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
+            if (args.PropertyName == nameof(MainEditorViewModel.CurrentFilePath))
             {
                 OnPropertyChanged(nameof(SelectedFilePath));
+                SaveFileCommand.NotifyCanExecuteChanged();
+            }
+
+            if (args.PropertyName == nameof(MainEditorViewModel.IsDocumentDirty))
+            {
                 SaveFileCommand.NotifyCanExecuteChanged();
             }
         };
@@ -56,8 +56,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public string SelectedFilePath
     {
-        get => _sharedFileContext.SelectedFilePath;
-        set => _sharedFileContext.SelectedFilePath = value;
+        get => MainEditor.CurrentFilePath;
+        set => MainEditor.CurrentFilePath = value;
     }
 
     public string ThemeToggleButtonText => IsDarkMode ? "Light Mode" : "Dark Mode";
@@ -70,7 +70,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void MarkDocumentDirty()
     {
-        IsDocumentDirty = true;
+        MainEditor.IsDocumentDirty = true;
         StatusMessage = "Updated selected details. Save file to persist changes.";
     }
 
@@ -111,7 +111,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         _sharedFileContext.LoadedDocument = loadResult.Document;
-        IsDocumentDirty = false;
+        MainEditor.IsDocumentDirty = false;
         StatusMessage = $"Opened JSON file with {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s).";
     }
 
@@ -127,10 +127,10 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        var saveResult = await _jsonFileService.SaveAsync(SelectedFilePath, _sharedFileContext.LoadedDocument);
+        var saveResult = await _jsonFileService.SaveAsync(SelectedFilePath, MainEditor.LoadedDocument);
         if (saveResult.Status == OperationStatus.Success)
         {
-            IsDocumentDirty = false;
+            MainEditor.IsDocumentDirty = false;
             StatusMessage = saveResult.Message;
             return;
         }
@@ -141,9 +141,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool CanSaveFile()
     {
-        return IsDocumentDirty &&
+        return MainEditor.IsDocumentDirty &&
             !string.IsNullOrWhiteSpace(SelectedFilePath) &&
-            _sharedFileContext.LoadedDocument is not null;
+            MainEditor.LoadedDocument is not null;
     }
 
     [RelayCommand]

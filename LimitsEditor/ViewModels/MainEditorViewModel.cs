@@ -36,6 +36,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditLimitCommand))]
+    [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
     private Limit? selectedLimit;
 
     [ObservableProperty]
@@ -131,10 +132,10 @@ public sealed partial class MainEditorViewModel : ObservableObject
     {
         LimitsInSelectedTest.Clear();
         SelectedLimit = null;
-        ClearEditState();
 
         if (value is null)
         {
+            ClearEditState();
             StatusMessage = HasSelectedSequence ? "No test selected." : StatusMessage;
             return;
         }
@@ -147,7 +148,14 @@ public sealed partial class MainEditorViewModel : ObservableObject
             SelectedLimit = value.Limits.FirstOrDefault();
         }
 
+        SyncEditableFromSelection();
         StatusMessage = $"Loaded {LimitsInSelectedTest.Count} limit(s) from test '{value.Name}'.";
+    }
+
+
+    partial void OnSelectedLimitChanged(Limit? value)
+    {
+        SyncEditableFromSelection();
     }
 
     [RelayCommand]
@@ -183,16 +191,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanEditLimit))]
     private void EditLimit()
     {
-        var targetLimit = ResolveLimitForEdit();
-        if (targetLimit is null)
-        {
-            return;
-        }
-
-        _targetLimit = targetLimit;
-        EditableLimit = CloneLimit(targetLimit);
-        SelectedLimit = targetLimit;
-        StatusMessage = $"Editing limit for test '{SelectedTest?.Name}'.";
+        SyncEditableFromSelection();
+        StatusMessage = $"Editing details for test '{SelectedTest?.Name}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -205,7 +205,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         CopyLimitValues(EditableLimit, _targetLimit);
         RefreshSelectedLimitView();
-        ClearEditState();
+        SyncEditableFromSelection();
         IsDocumentDirty = true;
         DocumentEdited?.Invoke();
         StatusMessage = "Applied in-memory edits to selected limit.";
@@ -214,8 +214,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasEditableLimit))]
     private void CancelEdit()
     {
-        ClearEditState();
-        StatusMessage = "Canceled edit changes.";
+        SyncEditableFromSelection();
+        StatusMessage = "Reverted unsaved changes in details panel.";
     }
 
     private bool CanEditLimit() => ResolveLimitForEdit() is not null;
@@ -286,6 +286,20 @@ public sealed partial class MainEditorViewModel : ObservableObject
         FilteredSequences.Clear();
         SelectedSequence = null;
         ResetTestAndLimitSelection();
+    }
+
+
+    private void SyncEditableFromSelection()
+    {
+        var targetLimit = ResolveLimitForEdit();
+        if (targetLimit is null)
+        {
+            ClearEditState();
+            return;
+        }
+
+        _targetLimit = targetLimit;
+        EditableLimit = CloneLimit(targetLimit);
     }
 
     private void ClearEditState()

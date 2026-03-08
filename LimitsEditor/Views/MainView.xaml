@@ -34,7 +34,7 @@
 
                 <StackPanel>
                     <TextBlock FontSize="30" FontWeight="SemiBold" Text="Limits JSON Editor" />
-                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="Global file context + tab-based add/find workflow." />
+                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="One focused workspace for sequence search, test browsing, and detail editing." />
                 </StackPanel>
 
                 <Button Grid.Column="1"
@@ -96,23 +96,12 @@
             </Grid>
         </materialDesign:Card>
 
-        <TabControl Grid.Row="4"
-                    SelectedIndex="{Binding SelectedTabIndex}">
-            <TabItem Header="Add">
-                <views:AddTabView DataContext="{Binding AddTab}" />
-            </TabItem>
-            <TabItem Header="Find">
-                <views:FindTabView DataContext="{Binding FindTab}" />
-            </TabItem>
-            <TabItem Header="Edit"
-                     IsEnabled="{Binding IsEditTabEnabled}">
-                <views:EditTabView DataContext="{Binding EditTab}" />
-            </TabItem>
-        </TabControl>
+        <views:MainEditorView Grid.Row="4" DataContext="{Binding MainEditor}" />
 
-        <TextBlock Grid.Row="6"
-                   Opacity="0.75"
-                   TextWrapping="Wrap"
-                   Text="{Binding StatusMessage}" />
+        <materialDesign:Card Grid.Row="6" Padding="10,8" UniformCornerRadius="8">
+            <TextBlock Opacity="0.8"
+                       TextWrapping="Wrap"
+                       Text="{Binding StatusMessage}" />
+        </materialDesign:Card>
     </Grid>
 </Window>

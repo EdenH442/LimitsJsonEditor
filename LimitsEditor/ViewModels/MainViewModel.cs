@@ -96,6 +96,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void CompleteEditSave()
     {
         IsDocumentDirty = true;
+        FindTab.RefreshSelectedLimitView();
         EditTab.ClearEdit();
         IsEditTabEnabled = false;
         SelectedTabIndex = FindTabIndex;

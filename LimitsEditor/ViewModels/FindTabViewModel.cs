@@ -60,6 +60,18 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public bool IsSingleTestSelected => string.Equals(SelectedTest?.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
 
+    public void RefreshSelectedLimitView()
+    {
+        if (SelectedTest is null)
+        {
+            return;
+        }
+
+        var refreshedSelection = ResolveLimitForEdit();
+        SelectedLimit = null;
+        SelectedLimit = refreshedSelection;
+    }
+
     partial void OnSelectedSequenceChanged(Sequence? value)
     {
         ResetTestAndLimitSelection();

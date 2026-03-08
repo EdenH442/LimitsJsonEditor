@@ -1,0 +1,130 @@
+<UserControl x:Class="LimitsEditor.Views.FindTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <materialDesign:Card Padding="16" UniformCornerRadius="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         Margin="0,0,10,0"
+                         materialDesign:HintAssist.Hint="JSON file path"
+                         Text="{Binding SelectedFilePath, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Button Grid.Column="1"
+                        Margin="0,0,10,0"
+                        Padding="14,6"
+                        Command="{Binding BrowseFileCommand}">
+                    <TextBlock Text="Browse" />
+                </Button>
+
+                <Button Grid.Column="2"
+                        Padding="14,6"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding LoadFileCommand}">
+                    <TextBlock Text="Load" />
+                </Button>
+            </Grid>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Row="2" Padding="16" UniformCornerRadius="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         Margin="0,0,10,0"
+                         materialDesign:HintAssist.Hint="Sequence search"
+                         Text="{Binding SequenceSearchText, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Button Grid.Column="1"
+                        Padding="14,6"
+                        Command="{Binding FindSequenceCommand}">
+                    <TextBlock Text="Find" />
+                </Button>
+            </Grid>
+        </materialDesign:Card>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="1.5*" />
+            </Grid.ColumnDefinitions>
+
+            <materialDesign:Card Grid.Column="0" Padding="12" UniformCornerRadius="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock FontWeight="SemiBold" Text="Sequences" />
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding MatchingSequences}"
+                             DisplayMemberPath="SequenceName"
+                             SelectedItem="{Binding SelectedSequence}" />
+                </Grid>
+            </materialDesign:Card>
+
+            <materialDesign:Card Grid.Column="2" Padding="12" UniformCornerRadius="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock FontWeight="SemiBold" Text="Tests" />
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding TestsInSelectedSequence}"
+                             DisplayMemberPath="TestName"
+                             SelectedItem="{Binding SelectedTest}" />
+                </Grid>
+            </materialDesign:Card>
+
+            <materialDesign:Card Grid.Column="4" Padding="12" UniformCornerRadius="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock FontWeight="SemiBold" Text="Selected Test Details" />
+                    <TextBox Grid.Row="2"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             Text="{Binding SelectedTestDetails}" />
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+
+        <TextBlock Grid.Row="6" Opacity="0.75" Text="{Binding StatusMessage}" />
+    </Grid>
+</UserControl>

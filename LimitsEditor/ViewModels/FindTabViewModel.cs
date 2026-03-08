@@ -38,10 +38,6 @@ public sealed partial class FindTabViewModel : ObservableObject
             {
                 ReloadFromSharedDocument();
             }
-            else if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
-            {
-                OnPropertyChanged(nameof(SelectedFilePath));
-            }
         };
 
         ReloadFromSharedDocument();
@@ -51,7 +47,6 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public ObservableCollection<TestItem> TestsInSelectedSequence { get; }
 
-    public string SelectedFilePath => _sharedFileContext.SelectedFilePath;
 
     partial void OnSelectedSequenceChanged(Sequence? value)
     {

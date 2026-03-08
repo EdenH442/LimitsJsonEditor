@@ -1,67 +1,70 @@
-{
-  "Sequences": [
-    {
-      "SequenceName": "Sequence A",
-      "TestItems": [
-        {
-          "TestName": "Voltage Check",
-          "TestType": "single",
-          "TestValues": [
-            {
-              "ResultType": "numeric",
-              "ExpectedResult": "Pass",
-              "Comparison": "GELE",
-              "Min": 4.8,
-              "Max": 5.2
-            }
-          ]
-        },
-        {
-          "TestName": "TemperatureRangeTest",
-          "TestType": "multiple",
-          "TestValues": [
-            {
-              "ResultType": "numeric",
-              "ExpectedResult": "Pass",
-              "Comparison": "GELE",
-              "Min": -10,
-              "Max": 0
-            },
-            {
-              "ResultType": "numeric",
-              "ExpectedResult": "Pass",
-              "Comparison": "GELE",
-              "Min": 0,
-              "Max": 50
-            },
-            {
-              "ResultType": "numeric",
-              "ExpectedResult": "Pass",
-              "Comparison": "GELE",
-              "Min": 50,
-              "Max": 85
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "SequenceName": "Sequence B",
-      "TestItems": [
-        {
-          "TestName": "string test",
-          "TestType": "single",
-          "TestValues": [
-            {
-              "ResultType": "string",
-              "ExpectedResult": "Pass",
-              "Comparison": "EQ",
-              "Min": "ABC",
-              "Max": null
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "seqName": "Sequence 1",
+    "stepList": [
+      {
+        "StepName": "Test 1",
+        "StepType": "SINGLE",
+        "limitList": [
+          {
+            "MultipleStepNameCheck": "",
+            "LimitType": "STRING",
+            "ComparisonType": "LOG",
+            "ThresholdType": "",
+            "ExpectedRes": "OK",
+            "Low": null,
+            "High": null,
+            "Unit": ""
+          }
+        ]
+      },
+      {
+        "StepName": "Test 2",
+        "StepType": "SINGLE",
+        "limitList": [
+          {
+            "MultipleStepNameCheck": "",
+            "LimitType": "NUMERIC",
+            "ComparisonType": "GELE",
+            "ThresholdType": "",
+            "ExpectedRes": "",
+            "Low": 4.8,
+            "High": 5.2,
+            "Unit": "V"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "seqName": "Sequence 2",
+    "stepList": [
+      {
+        "StepName": "Test A",
+        "StepType": "MULTIPLE",
+        "limitList": [
+          {
+            "MultipleStepNameCheck": "Test A1",
+            "LimitType": "NUMERIC",
+            "ComparisonType": "LE",
+            "ThresholdType": "",
+            "ExpectedRes": "",
+            "Low": 1,
+            "High": null,
+            "Unit": ""
+          },
+          {
+            "MultipleStepNameCheck": "Test A2",
+            "LimitType": "NUMERIC",
+            "ComparisonType": "LE",
+            "ThresholdType": "",
+            "ExpectedRes": "",
+            "Low": 1,
+            "High": null,
+            "Unit": ""
+          }
+        ]
+      }
+    ]
+  }
+]

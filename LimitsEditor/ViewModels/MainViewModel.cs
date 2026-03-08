@@ -32,6 +32,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool isEditTabEnabled;
 
+    [ObservableProperty]
+    private bool isDocumentDirty;
+
     public MainViewModel(
         AddTabViewModel addTabViewModel,
         FindTabViewModel findTabViewModel,
@@ -48,6 +51,8 @@ public sealed partial class MainViewModel : ObservableObject
         _jsonFileService = jsonFileService;
 
         FindTab.EditRequested = BeginLimitEdit;
+        EditTab.SaveRequested = CompleteEditSave;
+        EditTab.CancelRequested = CompleteEditCancel;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -86,6 +91,23 @@ public sealed partial class MainViewModel : ObservableObject
         EditTab.BeginEdit(limit);
         IsEditTabEnabled = true;
         SelectedTabIndex = EditTabIndex;
+    }
+
+    private void CompleteEditSave()
+    {
+        IsDocumentDirty = true;
+        EditTab.ClearEdit();
+        IsEditTabEnabled = false;
+        SelectedTabIndex = FindTabIndex;
+        StatusMessage = "Saved in-memory changes for selected limit.";
+    }
+
+    private void CompleteEditCancel()
+    {
+        EditTab.ClearEdit();
+        IsEditTabEnabled = false;
+        SelectedTabIndex = FindTabIndex;
+        StatusMessage = "Canceled edit and discarded unsaved changes.";
     }
 
     [RelayCommand]
@@ -127,6 +149,7 @@ public sealed partial class MainViewModel : ObservableObject
         _sharedFileContext.LoadedDocument = loadResult.Document;
         EditTab.ClearEdit();
         IsEditTabEnabled = false;
+        IsDocumentDirty = false;
         if (SelectedTabIndex == EditTabIndex)
         {
             SelectedTabIndex = FindTabIndex;

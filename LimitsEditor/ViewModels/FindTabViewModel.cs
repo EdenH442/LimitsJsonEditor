@@ -3,16 +3,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
-using Microsoft.Win32;
 
 namespace LimitsEditor.ViewModels;
 
 public sealed partial class FindTabViewModel : ObservableObject
 {
     private readonly SharedFileContext _sharedFileContext;
-    private readonly IJsonFileService _jsonFileService;
-
-    private LimitaDocument _loadedDocument = new();
 
     [ObservableProperty]
     private string statusMessage = "Ready";
@@ -29,32 +25,33 @@ public sealed partial class FindTabViewModel : ObservableObject
     [ObservableProperty]
     private string selectedTestDetails = "Select a test to view details.";
 
-    public FindTabViewModel(SharedFileContext sharedFileContext, IJsonFileService jsonFileService)
+    public FindTabViewModel(SharedFileContext sharedFileContext)
     {
         _sharedFileContext = sharedFileContext;
-        _jsonFileService = jsonFileService;
 
         MatchingSequences = new ObservableCollection<Sequence>();
         TestsInSelectedSequence = new ObservableCollection<TestItem>();
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
-            if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
+            if (args.PropertyName == nameof(SharedFileContext.LoadedDocument))
+            {
+                ReloadFromSharedDocument();
+            }
+            else if (args.PropertyName == nameof(SharedFileContext.SelectedFilePath))
             {
                 OnPropertyChanged(nameof(SelectedFilePath));
             }
         };
+
+        ReloadFromSharedDocument();
     }
 
     public ObservableCollection<Sequence> MatchingSequences { get; }
 
     public ObservableCollection<TestItem> TestsInSelectedSequence { get; }
 
-    public string SelectedFilePath
-    {
-        get => _sharedFileContext.SelectedFilePath;
-        set => _sharedFileContext.SelectedFilePath = value;
-    }
+    public string SelectedFilePath => _sharedFileContext.SelectedFilePath;
 
     partial void OnSelectedSequenceChanged(Sequence? value)
     {
@@ -106,50 +103,6 @@ public sealed partial class FindTabViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void BrowseFile()
-    {
-        var dialog = new OpenFileDialog
-        {
-            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
-            CheckFileExists = true,
-            FileName = string.IsNullOrWhiteSpace(SelectedFilePath) ? string.Empty : SelectedFilePath
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            SelectedFilePath = dialog.FileName;
-            OnPropertyChanged(nameof(SelectedFilePath));
-            StatusMessage = "Selected JSON file path.";
-        }
-    }
-
-    [RelayCommand]
-    private async Task LoadFileAsync()
-    {
-        var result = await _jsonFileService.LoadAsync(SelectedFilePath);
-
-        if (result.Status != OperationStatus.Success || result.Document is null)
-        {
-            StatusMessage = result.Message;
-            return;
-        }
-
-        _loadedDocument = result.Document;
-        MatchingSequences.Clear();
-        TestsInSelectedSequence.Clear();
-        SelectedSequence = null;
-        SelectedTest = null;
-        SelectedTestDetails = "Select a test to view details.";
-
-        foreach (var sequence in _loadedDocument.Sequences)
-        {
-            MatchingSequences.Add(sequence);
-        }
-
-        StatusMessage = $"Loaded {_loadedDocument.Sequences.Count} sequence(s).";
-    }
-
-    [RelayCommand]
     private void FindSequence()
     {
         MatchingSequences.Clear();
@@ -159,8 +112,8 @@ public sealed partial class FindTabViewModel : ObservableObject
 
         var query = SequenceSearchText.Trim();
         var matches = string.IsNullOrWhiteSpace(query)
-            ? _loadedDocument.Sequences
-            : _loadedDocument.Sequences.Where(s => s.SequenceName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            ? _sharedFileContext.LoadedDocument.Sequences
+            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SequenceName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 
         foreach (var sequence in matches)
         {
@@ -168,5 +121,21 @@ public sealed partial class FindTabViewModel : ObservableObject
         }
 
         StatusMessage = $"Found {MatchingSequences.Count} matching sequence(s).";
+    }
+
+    private void ReloadFromSharedDocument()
+    {
+        MatchingSequences.Clear();
+        TestsInSelectedSequence.Clear();
+        SelectedSequence = null;
+        SelectedTest = null;
+        SelectedTestDetails = "Select a test to view details.";
+
+        foreach (var sequence in _sharedFileContext.LoadedDocument.Sequences)
+        {
+            MatchingSequences.Add(sequence);
+        }
+
+        StatusMessage = $"Loaded {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s) from current file context.";
     }
 }

@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
 using LimitsEditor.Validation;
-using Microsoft.Win32;
 
 namespace LimitsEditor.ViewModels;
 
@@ -58,29 +57,7 @@ public sealed partial class AddTabViewModel : ObservableObject
 
     public IReadOnlyList<TestType> AvailableTestTypes { get; }
 
-    public string SelectedFilePath
-    {
-        get => _sharedFileContext.SelectedFilePath;
-        set => _sharedFileContext.SelectedFilePath = value;
-    }
-
-    [RelayCommand]
-    private void BrowseFile()
-    {
-        var dialog = new OpenFileDialog
-        {
-            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
-            CheckFileExists = false,
-            FileName = string.IsNullOrWhiteSpace(SelectedFilePath) ? string.Empty : SelectedFilePath
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            SelectedFilePath = dialog.FileName;
-            OnPropertyChanged(nameof(SelectedFilePath));
-            StatusMessage = "Selected JSON file path.";
-        }
-    }
+    public string SelectedFilePath => _sharedFileContext.SelectedFilePath;
 
     [RelayCommand]
     private void AddTestValue()
@@ -109,6 +86,12 @@ public sealed partial class AddTabViewModel : ObservableObject
     [RelayCommand]
     private async Task ApplyChangesAsync()
     {
+        if (string.IsNullOrWhiteSpace(_sharedFileContext.SelectedFilePath))
+        {
+            StatusMessage = "Select a file path and load it in the header first.";
+            return;
+        }
+
         var request = new UpsertTestRequest
         {
             SequenceName = SequenceName,
@@ -128,22 +111,7 @@ public sealed partial class AddTabViewModel : ObservableObject
             return;
         }
 
-        var loadResult = await _jsonFileService.LoadAsync(SelectedFilePath);
-        LimitaDocument document;
-
-        if (loadResult.Status == OperationStatus.NotFound)
-        {
-            document = new LimitaDocument();
-        }
-        else if (loadResult.Status != OperationStatus.Success || loadResult.Document is null)
-        {
-            StatusMessage = loadResult.Message;
-            return;
-        }
-        else
-        {
-            document = loadResult.Document;
-        }
+        var document = _sharedFileContext.LoadedDocument;
 
         var upsertResult = _jsonUpsertService.Upsert(document, request);
         if (upsertResult.RequiresOverwriteConfirmation)
@@ -176,7 +144,12 @@ public sealed partial class AddTabViewModel : ObservableObject
             return;
         }
 
-        var saveResult = await _jsonFileService.SaveAsync(SelectedFilePath, document);
+        var saveResult = await _jsonFileService.SaveAsync(_sharedFileContext.SelectedFilePath, document);
+        if (saveResult.Status == OperationStatus.Success)
+        {
+            _sharedFileContext.LoadedDocument = document;
+        }
+
         StatusMessage = saveResult.Message;
     }
 }

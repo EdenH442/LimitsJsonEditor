@@ -17,8 +17,12 @@
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="16" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="12" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <materialDesign:Card Padding="18" UniformCornerRadius="12">
@@ -30,7 +34,7 @@
 
                 <StackPanel>
                     <TextBlock FontSize="30" FontWeight="SemiBold" Text="Limits JSON Editor" />
-                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="Tab-based workflow for adding and finding sequence tests." />
+                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="Global file context + tab-based add/find workflow." />
                 </StackPanel>
 
                 <Button Grid.Column="1"
@@ -45,7 +49,42 @@
             </Grid>
         </materialDesign:Card>
 
-        <TabControl Grid.Row="2">
+        <materialDesign:Card Grid.Row="2" Padding="16" UniformCornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         Margin="0,0,10,0"
+                         materialDesign:HintAssist.Hint="JSON file path"
+                         Text="{Binding SelectedFilePath, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Button Grid.Column="1"
+                        Margin="0,0,10,0"
+                        Padding="14,6"
+                        Command="{Binding BrowseFileCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FolderSearchOutline" Width="18" Height="18" Margin="0,0,6,0" />
+                        <TextBlock Text="Browse" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="2"
+                        Padding="14,6"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding LoadFileCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileDownloadOutline" Width="18" Height="18" Margin="0,0,6,0" />
+                        <TextBlock Text="Load" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </materialDesign:Card>
+
+        <TabControl Grid.Row="4">
             <TabItem Header="Add">
                 <views:AddTabView DataContext="{Binding AddTab}" />
             </TabItem>
@@ -53,5 +92,10 @@
                 <views:FindTabView DataContext="{Binding FindTab}" />
             </TabItem>
         </TabControl>
+
+        <TextBlock Grid.Row="6"
+                   Opacity="0.75"
+                   TextWrapping="Wrap"
+                   Text="{Binding StatusMessage}" />
     </Grid>
 </Window>

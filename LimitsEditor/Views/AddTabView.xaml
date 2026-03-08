@@ -9,37 +9,12 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
             <RowDefinition Height="*" />
             <RowDefinition Height="12" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <materialDesign:Card Padding="16" UniformCornerRadius="10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBox Grid.Column="0"
-                         Margin="0,0,10,0"
-                         materialDesign:HintAssist.Hint="JSON file path"
-                         Text="{Binding SelectedFilePath, UpdateSourceTrigger=PropertyChanged}" />
-
-                <Button Grid.Column="1"
-                        Padding="14,6"
-                        Command="{Binding BrowseFileCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FolderSearchOutline" Width="18" Height="18" Margin="0,0,6,0" />
-                        <TextBlock Text="Browse" />
-                    </StackPanel>
-                </Button>
-            </Grid>
-        </materialDesign:Card>
-
-        <materialDesign:Card Grid.Row="2" Padding="16" UniformCornerRadius="10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -64,7 +39,7 @@
             </Grid>
         </materialDesign:Card>
 
-        <materialDesign:Card Grid.Row="4" Padding="16" UniformCornerRadius="10">
+        <materialDesign:Card Grid.Row="2" Padding="16" UniformCornerRadius="10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -129,7 +104,7 @@
             </Grid>
         </materialDesign:Card>
 
-        <TextBlock Grid.Row="6"
+        <TextBlock Grid.Row="4"
                    Opacity="0.75"
                    TextWrapping="Wrap"
                    Text="{Binding StatusMessage}" />

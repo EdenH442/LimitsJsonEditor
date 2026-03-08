@@ -170,18 +170,14 @@
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
                                 <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding SelectedLimit.ComparisonType, TargetNullValue=-}" />
 
-                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Threshold" />
-                                <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding SelectedLimit.ThresholdType, TargetNullValue=-}" />
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Expected" />
+                                <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding SelectedLimit.ExpectedRes, TargetNullValue=-}" />
 
-                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Expected" />
-                                <TextBlock Grid.Row="8" Grid.Column="2" Text="{Binding SelectedLimit.ExpectedRes, TargetNullValue=-}" />
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Low" />
+                                <TextBlock Grid.Row="8" Grid.Column="2" Text="{Binding SelectedLimit.Low, TargetNullValue=-}" />
 
-                                <TextBlock Grid.Row="10" Grid.Column="0" Text="Low / High" />
-                                <TextBlock Grid.Row="10" Grid.Column="2">
-                                    <Run Text="{Binding SelectedLimit.Low, TargetNullValue=-}" />
-                                    <Run Text=" / " />
-                                    <Run Text="{Binding SelectedLimit.High, TargetNullValue=-}" />
-                                </TextBlock>
+                                <TextBlock Grid.Row="10" Grid.Column="0" Text="High" />
+                                <TextBlock Grid.Row="10" Grid.Column="2" Text="{Binding SelectedLimit.High, TargetNullValue=-}" />
 
                                 <TextBlock Grid.Row="12" Grid.Column="0" Text="Unit" />
                                 <TextBlock Grid.Row="12" Grid.Column="2" Text="{Binding SelectedLimit.Unit, TargetNullValue=-}" />

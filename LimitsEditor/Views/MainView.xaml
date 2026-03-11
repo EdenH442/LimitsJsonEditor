@@ -33,13 +33,16 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="JSON File Editor" />
-                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="One Place To Edit Them All" />
+                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="JSON File Editor" HorizontalAlignment="Left" Margin="15,0,0,0"/>
+                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="One Place To Edit Them All" HorizontalAlignment="Left" Margin="15,0,0,0"/>
                 </StackPanel>
 
                 <Button Grid.Column="1"
-                        VerticalAlignment="Top"
+                        VerticalAlignment="Center"
+                        Margin="0,0,15,0"
                         Padding="14,6"
+                        Width="150"
+                        Height="40"
                         Command="{Binding ToggleThemeCommand}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ThemeLightDark" Width="18" Height="18" Margin="0,0,6,0" />

@@ -151,12 +151,54 @@
                 <Border Grid.Row="4" Style="{StaticResource ListPanelBorderStyle}">
                     <ListBox ItemsSource="{Binding TestNavigationItems}"
                              BorderThickness="0"
-                             SelectedItem="{Binding SelectedTestItem}">
+                             SelectedItem="{Binding SelectedRootTestItem, Mode=TwoWay}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Margin="{Binding ItemMargin}"
-                                           Text="{Binding DisplayName}"
-                                           TextTrimming="CharacterEllipsis" />
+                                <StackPanel>
+                                    <Border Padding="8,6"
+                                            Margin="0,0,0,4"
+                                            CornerRadius="6"
+                                            Background="{DynamicResource MaterialDesignPaper}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon Grid.Column="0"
+                                                                     Width="14"
+                                                                     Height="14"
+                                                                     VerticalAlignment="Center"
+                                                                     Kind="PlaylistCheck" />
+                                            <TextBlock Grid.Column="2"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="SemiBold"
+                                                       Text="{Binding DisplayName}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+                                    </Border>
+
+                                    <ListBox Margin="18,0,0,6"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             ItemsSource="{Binding SubTests}"
+                                             SelectedItem="{Binding DataContext.SelectedTestItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                                             Visibility="{Binding IsBranchExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="8,4"
+                                                        Margin="0,0,0,3"
+                                                        CornerRadius="5"
+                                                        Background="{DynamicResource MaterialDesignBackground}">
+                                                    <TextBlock Margin="{Binding ItemMargin}"
+                                                               Opacity="0.92"
+                                                               Text="{Binding DisplayName}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

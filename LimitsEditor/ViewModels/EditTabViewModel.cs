@@ -12,7 +12,7 @@ public sealed partial class EditTabViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
     [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
-    private Limit? editableLimit;
+    private EditableLimitViewModel? editableLimit;
 
     public bool HasEditableLimit => EditableLimit is not null;
 
@@ -23,7 +23,7 @@ public sealed partial class EditTabViewModel : ObservableObject
     public void BeginEdit(Limit sourceLimit)
     {
         _targetLimit = sourceLimit;
-        EditableLimit = CloneLimit(sourceLimit);
+        EditableLimit = EditableLimitViewModel.FromModel(sourceLimit);
     }
 
     public void ClearEdit()
@@ -55,7 +55,7 @@ public sealed partial class EditTabViewModel : ObservableObject
         return _targetLimit is not null && EditableLimit is not null;
     }
 
-    private static void CopyLimitValues(Limit source, Limit destination)
+    private static void CopyLimitValues(EditableLimitViewModel source, Limit destination)
     {
         destination.MultipleStepNameCheck = source.MultipleStepNameCheck;
         destination.LimitType = source.LimitType;
@@ -65,20 +65,5 @@ public sealed partial class EditTabViewModel : ObservableObject
         destination.Low = source.Low;
         destination.High = source.High;
         destination.Unit = source.Unit;
-    }
-
-    private static Limit CloneLimit(Limit source)
-    {
-        return new Limit
-        {
-            MultipleStepNameCheck = source.MultipleStepNameCheck,
-            LimitType = source.LimitType,
-            ComparisonType = source.ComparisonType,
-            ThresholdType = source.ThresholdType,
-            ExpectedRes = source.ExpectedRes,
-            Low = source.Low,
-            High = source.High,
-            Unit = source.Unit
-        };
     }
 }

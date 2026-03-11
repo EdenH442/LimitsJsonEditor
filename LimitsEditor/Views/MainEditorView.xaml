@@ -337,15 +337,9 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <editors:RootTestFieldsEditor Grid.Row="0"
-                                                          TestName="{Binding EditableStepName, Mode=TwoWay}"
-                                                          TestType="{Binding EditableStepType, Mode=TwoWay}" />
+                            <editors:RootTestFieldsEditor Grid.Row="0" />
 
-                            <editors:SubTestFieldsEditor Grid.Row="2"
-                                                         ShowSubTestName="{Binding IsSubTestItemSelected}"
-                                                         IsEditorEnabled="{Binding HasEditableLimit}"
-                                                         SubTestName="{Binding EditableLimit.MultipleStepNameCheck, Mode=TwoWay}"
-                                                         LimitEditor="{Binding EditableLimit, Mode=TwoWay}" />
+                            <editors:SubTestFieldsEditor Grid.Row="2" />
                         </Grid>
                     </Grid>
                 </Border>

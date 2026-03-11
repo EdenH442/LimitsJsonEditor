@@ -19,11 +19,11 @@
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Test Name" />
         <TextBox Grid.Row="0"
                  Grid.Column="2"
-                 Text="{Binding TestName, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                 Text="{Binding EditableStepName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Test Type" />
         <TextBox Grid.Row="2"
                  Grid.Column="2"
-                 Text="{Binding TestType, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                 Text="{Binding EditableStepType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
     </Grid>
 </UserControl>

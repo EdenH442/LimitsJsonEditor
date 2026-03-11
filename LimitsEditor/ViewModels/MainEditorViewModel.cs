@@ -10,6 +10,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 {
     private readonly SharedFileContext _sharedFileContext;
     private readonly EditorFilteringSelectionService _filteringSelectionService;
+    private Step? _targetTest;
     private Limit? _targetLimit;
 
     [ObservableProperty]
@@ -27,14 +28,27 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedTest))]
+    [NotifyPropertyChangedFor(nameof(NotHasSelectedTest))]
     [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
     [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
-    [NotifyPropertyChangedFor(nameof(IsSubTestSelected))]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
+    [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(SelectedRootTestItem))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     private TestNavigationItemViewModel? selectedTestItem;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
+    private string editableStepName = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
+    private string editableStepType = string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
@@ -101,15 +115,18 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public bool HasSelectedTest => SelectedTestItem is not null;
 
+    public bool NotHasSelectedTest => !HasSelectedTest;
+
     public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
 
     public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, "SINGLE", StringComparison.OrdinalIgnoreCase);
 
-    public bool IsSubTestSelected => SelectedTestItem?.IsSubTest == true;
+
+    public bool IsSubTestItemSelected => SelectedTestItem?.IsSubTest == true;
 
     public bool HasEditableLimit => EditableLimit is not null;
 
-    public bool HasPendingChanges => _targetLimit is not null && EditableLimit is not null && EditableLimit.HasChangesComparedTo(_targetLimit);
+    public bool HasPendingChanges => HasRootChanges() || HasLimitChanges();
 
     public bool CanDeleteSequence => HasSelectedSequence;
 
@@ -161,6 +178,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
             return;
         }
 
+
         if (value.IsSubTest)
         {
             SelectedLimit = value.SubTestLimit;
@@ -171,7 +189,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
 
         SyncEditableFromSelection();
-        RebuildTestNavigation(_filteringSelectionService.BuildTestsForSequence(SelectedSequence), value);
         UpdateNavigationSelectionState();
         if (value.IsRoot)
         {
@@ -249,17 +266,27 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
     private void SaveChanges()
     {
-        if (_targetLimit is null || EditableLimit is null)
+        if (SelectedTestItem is null)
         {
             return;
         }
 
-        CopyLimitValues(EditableLimit, _targetLimit);
+        if (_targetTest is not null)
+        {
+            _targetTest.StepName = EditableStepName;
+            _targetTest.StepType = EditableStepType;
+        }
+
+        if (_targetLimit is not null && EditableLimit is not null)
+        {
+            CopyLimitValues(EditableLimit, _targetLimit);
+        }
+
         RefreshSelectedLimitView();
         SyncEditableFromSelection();
         IsDocumentDirty = true;
         DocumentEdited?.Invoke();
-        StatusMessage = "Applied in-memory edits to selected limit.";
+        StatusMessage = "Applied in-memory edits to selected item.";
     }
 
     [RelayCommand(CanExecute = nameof(CanCancelEdit))]
@@ -269,7 +296,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Reverted unsaved changes in details panel.";
     }
 
-    private bool CanSaveChanges() => _targetLimit is not null && EditableLimit is not null && HasPendingChanges;
+    private bool CanSaveChanges() => SelectedTestItem is not null && HasPendingChanges;
 
     private bool CanCancelEdit() => HasPendingChanges;
 
@@ -297,7 +324,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
             return SelectedTest.Limits.FirstOrDefault();
         }
 
-        if (IsMultipleTestSelected && IsSubTestSelected)
+        if (IsMultipleTestSelected && IsSubTestItemSelected)
         {
             return SelectedLimit;
         }
@@ -341,10 +368,23 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void SyncEditableFromSelection()
     {
+        if (SelectedTestItem is null)
+        {
+            ClearEditState();
+            return;
+        }
+
+        var step = SelectedTestItem.RootTest.Model;
+        _targetTest = step;
+        EditableStepName = step.StepName;
+        EditableStepType = step.StepType;
+
         var targetLimit = ResolveLimitForEdit();
         if (targetLimit is null)
         {
-            ClearEditState();
+            _targetLimit = null;
+            EditableLimit = null;
+            OnPropertyChanged(nameof(HasPendingChanges));
             return;
         }
 
@@ -369,12 +409,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
             var isActiveRoot = ReferenceEquals(activeRoot?.Model, rootTest.Model);
             rootItem.IsBranchExpanded = isActiveRoot && rootItem.IsMultipleRoot;
 
-            if (rootItem.IsBranchExpanded)
+            foreach (var subTest in rootTest.Limits)
             {
-                foreach (var subTest in rootTest.Limits)
-                {
-                    rootItem.SubTests.Add(new TestNavigationItemViewModel(rootTest, subTest));
-                }
+                rootItem.SubTests.Add(new TestNavigationItemViewModel(rootTest, subTest));
             }
 
             rootNavigationItems.Add(rootItem);
@@ -391,7 +428,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         if (selectedSubTest is not null)
         {
             matchedSelection = TestNavigationItems
-                .Where(root => root.IsBranchExpanded)
                 .SelectMany(root => root.SubTests)
                 .FirstOrDefault(item => activeRoot is not null && item.Matches(activeRoot, selectedSubTest));
         }
@@ -401,32 +437,57 @@ public sealed partial class MainEditorViewModel : ObservableObject
             matchedSelection ??= TestNavigationItems.FirstOrDefault(item => item.Matches(activeRoot, null));
         }
 
-        if (!ReferenceEquals(SelectedTestItem, matchedSelection))
+        if (matchedSelection is not null)
         {
             SelectedTestItem = matchedSelection;
-            return;
+            UpdateNavigationSelectionState();
         }
-
     }
 
     private void UpdateNavigationSelectionState()
     {
+        var selectedRootModel = SelectedTestItem?.RootTest.Model;
+
         foreach (var rootItem in TestNavigationItems)
         {
-            rootItem.IsSelected = ReferenceEquals(rootItem, SelectedTestItem);
+            var isSelectedRoot = SelectedTestItem?.IsRoot == true && ReferenceEquals(rootItem.RootTest.Model, SelectedTestItem.RootTest.Model);
+            rootItem.IsSelected = isSelectedRoot;
+            rootItem.IsBranchExpanded = ReferenceEquals(rootItem.RootTest.Model, selectedRootModel) && rootItem.IsMultipleRoot;
+
             foreach (var subTest in rootItem.SubTests)
             {
-                subTest.IsSelected = ReferenceEquals(subTest, SelectedTestItem);
+                var isSelectedSubTest = SelectedTestItem?.IsSubTest == true
+                    && ReferenceEquals(subTest.RootTest.Model, SelectedTestItem.RootTest.Model)
+                    && ReferenceEquals(subTest.SubTestLimit, SelectedTestItem.SubTestLimit);
+                subTest.IsSelected = isSelectedSubTest;
             }
         }
-
     }
 
     private void ClearEditState()
     {
+        _targetTest = null;
+        EditableStepName = string.Empty;
+        EditableStepType = string.Empty;
         _targetLimit = null;
         EditableLimit = null;
         OnPropertyChanged(nameof(HasPendingChanges));
+    }
+
+    private bool HasRootChanges()
+    {
+        if (_targetTest is null)
+        {
+            return false;
+        }
+
+        return !string.Equals(EditableStepName, _targetTest.StepName, StringComparison.Ordinal)
+            || !string.Equals(EditableStepType, _targetTest.StepType, StringComparison.Ordinal);
+    }
+
+    private bool HasLimitChanges()
+    {
+        return _targetLimit is not null && EditableLimit is not null && EditableLimit.HasChangesComparedTo(_targetLimit);
     }
 
     private static void ReplaceWith<T>(ObservableCollection<T> target, IEnumerable<T> items)

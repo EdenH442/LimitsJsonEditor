@@ -11,17 +11,26 @@
 
             <Style x:Key="TestNavigationListBoxItemStyle" TargetType="ListBoxItem">
                 <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <ContentPresenter />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="TestNavigationRowBorderStyle" TargetType="Border">
                 <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}" />
+                        <Setter Property="Background" Value="#505050" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -30,7 +39,7 @@
                 <Setter Property="Background" Value="{DynamicResource MaterialDesignBackground}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}" />
+                        <Setter Property="Background" Value="#505050" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>

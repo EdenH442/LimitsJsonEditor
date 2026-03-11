@@ -67,7 +67,7 @@
 
                 <TextBlock Grid.Row="2"
                            Style="{StaticResource SubtleTextStyle}"
-                           Text="Search and choose a sequence to inspect related tests." />
+                           Text="Search and choose a sequence to inspect" />
 
                 <Grid Grid.Row="4">
                     <Grid.RowDefinitions>
@@ -146,7 +146,7 @@
 
                 <TextBlock Grid.Row="2"
                            Style="{StaticResource SubtleTextStyle}"
-                           Text="Tests are shown for the currently selected sequence." />
+                           Text="Tests for the currently selected sequence." />
 
                 <Border Grid.Row="4" Style="{StaticResource ListPanelBorderStyle}">
                     <ListBox ItemsSource="{Binding SelectedSequenceTests}"
@@ -198,7 +198,7 @@
 
                 <TextBlock Grid.Row="2"
                            Style="{StaticResource SubtleTextStyle}"
-                           Text="Review and edit selected limit values before saving the file." />
+                           Text="Review and edit values of test. Apply doesnt save on file" />
 
                 <TextBlock Grid.Row="4"
                            FontWeight="SemiBold"

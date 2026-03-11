@@ -33,8 +33,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="Limits JSON Editor" />
-                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="One focused workspace for sequence search, test browsing, and detail editing." />
+                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="JSON File Editor" />
+                    <TextBlock Style="{StaticResource SubtleTextStyle}" Text="One Place To Edit Them All" />
                 </StackPanel>
 
                 <Button Grid.Column="1"

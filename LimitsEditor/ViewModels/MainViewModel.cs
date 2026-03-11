@@ -87,7 +87,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (dialog.ShowDialog() == true)
         {
             SelectedFilePath = dialog.FileName;
-            OpenFileCommand.Execute(null);
+            StatusMessage = "File selected. Click Open to load the JSON content.";
         }
     }
 

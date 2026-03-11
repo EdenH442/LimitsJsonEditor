@@ -252,60 +252,108 @@
                         BorderBrush="{DynamicResource MaterialDesignDivider}"
                         BorderThickness="1"
                         CornerRadius="8">
-                    <Grid IsEnabled="{Binding HasEditableLimit}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Style="{StaticResource SubtleTextStyle}"
+                                   Text="Select a test or sub-test in the Tests panel to edit details."
+                                   Visibility="{Binding NotHasSelectedTest, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                        <Grid Visibility="{Binding HasSelectedTest, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="6" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
+                                <RowDefinition Height="12" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" MinWidth="132" />
-                                <ColumnDefinition Width="10" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="Multiple Step"
-                                       Visibility="{Binding IsSubTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            <TextBox Grid.Row="0"
-                                     Grid.Column="2"
-                                     Text="{Binding EditableLimit.MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
-                                     Visibility="{Binding IsSubTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            <Grid Grid.Row="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="132" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Limit Type" />
-                            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableLimit.LimitType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Test Name" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="2"
+                                         Text="{Binding EditableStepName, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
-                            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Test Type" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="2"
+                                         Text="{Binding EditableStepType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            </Grid>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Threshold Type" />
-                            <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            <Grid Grid.Row="2"
+                                  Visibility="{Binding IsSubTestItemSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  IsEnabled="{Binding HasEditableLimit}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="132" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sub-Test Name" />
+                                <TextBox Grid.Column="2"
+                                         Text="{Binding EditableLimit.MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            </Grid>
 
-                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Expected" />
-                            <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            <Grid Grid.Row="4"
+                                  IsEnabled="{Binding HasEditableLimit}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="132" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="10" Grid.Column="0" Text="Low" />
-                            <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.Low, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Limit Type" />
+                                <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding EditableLimit.LimitType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-                            <TextBlock Grid.Row="12" Grid.Column="0" Text="High" />
-                            <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.High, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Comparison" />
+                                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-                            <TextBlock Grid.Row="14" Grid.Column="0" Text="Unit" />
-                            <TextBox Grid.Row="14" Grid.Column="2" Text="{Binding EditableLimit.Unit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Threshold Type" />
+                                <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Expected" />
+                                <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Low" />
+                                <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.Low, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="10" Grid.Column="0" Text="High" />
+                                <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.High, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="12" Grid.Column="0" Text="Unit" />
+                                <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.Unit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            </Grid>
                         </Grid>
+                    </Grid>
                 </Border>
 
                 <WrapPanel Grid.Row="6" HorizontalAlignment="Right" Orientation="Horizontal">

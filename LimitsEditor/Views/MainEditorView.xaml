@@ -28,18 +28,30 @@
 
             <Style x:Key="TestNavigationRowBorderStyle" TargetType="Border">
                 <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="1" />
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                        <Setter Property="Background" Value="#15000000" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                        <Setter Property="Background" Value="#505050" />
+                        <Setter Property="Background" Value="#1A3F51B5" />
+                        <Setter Property="BorderBrush" Value="#7A3F51B5" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
 
             <Style x:Key="SubTestNavigationRowBorderStyle" TargetType="Border">
                 <Setter Property="Background" Value="{DynamicResource MaterialDesignBackground}" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="1" />
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                        <Setter Property="Background" Value="#12000000" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                        <Setter Property="Background" Value="#505050" />
+                        <Setter Property="Background" Value="#143F51B5" />
+                        <Setter Property="BorderBrush" Value="#663F51B5" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -209,12 +221,13 @@
                                             <TextBlock Grid.Column="2"
                                                        VerticalAlignment="Center"
                                                        FontWeight="SemiBold"
+                                                       FontSize="13"
                                                        Text="{Binding DisplayName}"
                                                        TextTrimming="CharacterEllipsis" />
                                         </Grid>
                                     </Border>
 
-                                    <ListBox Margin="18,0,0,6"
+                                    <ListBox Margin="24,0,0,6"
                                              Background="Transparent"
                                              BorderThickness="0"
                                              ItemContainerStyle="{StaticResource TestNavigationListBoxItemStyle}"
@@ -224,13 +237,27 @@
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Padding="8,4"
-                                                        Margin="0,0,0,3"
+                                                        Margin="0,1,0,3"
                                                         CornerRadius="5"
                                                         Style="{StaticResource SubTestNavigationRowBorderStyle}">
-                                                    <TextBlock Margin="{Binding ItemMargin}"
-                                                               Opacity="0.92"
-                                                               Text="{Binding DisplayName}"
-                                                               TextTrimming="CharacterEllipsis" />
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="6" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                                   Opacity="0.85"
+                                                                   Text="↳" />
+                                                        <TextBlock Grid.Column="2"
+                                                                   Margin="{Binding ItemMargin}"
+                                                                   FontSize="12"
+                                                                   Opacity="0.92"
+                                                                   Text="{Binding DisplayName}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </Grid>
                                                 </Border>
                                             </DataTemplate>
                                         </ListBox.ItemTemplate>

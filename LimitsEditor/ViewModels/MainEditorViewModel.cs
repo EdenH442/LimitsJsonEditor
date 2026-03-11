@@ -32,6 +32,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSubTestSelected))]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
+    [NotifyPropertyChangedFor(nameof(SelectedRootTestItem))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     private TestNavigationItemViewModel? selectedTestItem;
 
@@ -93,6 +94,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public TestItemViewModel? SelectedTest => SelectedTestItem?.RootTest;
 
+    [ObservableProperty]
+    private TestNavigationItemViewModel? selectedRootTestItem;
+
     public bool HasSelectedSequence => SelectedSequence is not null;
 
     public bool HasSelectedTest => SelectedTestItem is not null;
@@ -133,12 +137,25 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = $"Loaded {tests.Count} test(s) from sequence '{value.Name}'.";
     }
 
+
+    partial void OnSelectedRootTestItemChanged(TestNavigationItemViewModel? value)
+    {
+        if (value is null || ReferenceEquals(value, SelectedTestItem) || SelectedTestItem?.IsSubTest == true && ReferenceEquals(value.RootTest.Model, SelectedTestItem.RootTest.Model))
+        {
+            return;
+        }
+
+        SelectedTestItem = value;
+    }
+
     partial void OnSelectedTestItemChanged(TestNavigationItemViewModel? value)
     {
         SelectedLimit = null;
 
         if (value is null)
         {
+            SelectedRootTestItem = null;
+            UpdateNavigationSelectionState();
             ClearEditState();
             StatusMessage = HasSelectedSequence ? "No test selected." : StatusMessage;
             return;
@@ -155,6 +172,16 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         SyncEditableFromSelection();
         RebuildTestNavigation(_filteringSelectionService.BuildTestsForSequence(SelectedSequence), value);
+        UpdateNavigationSelectionState();
+        if (value.IsRoot)
+        {
+            SelectedRootTestItem = value;
+        }
+        else
+        {
+            SelectedRootTestItem = TestNavigationItems.FirstOrDefault(item => item.Matches(value.RootTest, null));
+        }
+
         StatusMessage = $"Selected {(value.IsRoot ? "test" : "sub-test")} '{value.DisplayName}'.";
     }
 
@@ -328,40 +355,71 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void RebuildTestNavigation(IReadOnlyList<TestItemViewModel> rootTests, TestNavigationItemViewModel? preferredSelection)
     {
-        var activeRoot = preferredSelection?.RootTest;
-        if (activeRoot is null && SelectedTestItem is not null)
-        {
-            activeRoot = SelectedTestItem.RootTest;
-        }
+        var activeRoot = preferredSelection?.RootTest ?? SelectedTestItem?.RootTest;
+        var selectedSubTest = preferredSelection?.IsSubTest == true
+            ? preferredSelection.SubTestLimit
+            : SelectedTestItem?.IsSubTest == true
+                ? SelectedTestItem.SubTestLimit
+                : null;
 
-        var navigationItems = new List<TestNavigationItemViewModel>();
+        var rootNavigationItems = new List<TestNavigationItemViewModel>();
         foreach (var rootTest in rootTests)
         {
-            navigationItems.Add(new TestNavigationItemViewModel(rootTest, null));
+            var rootItem = new TestNavigationItemViewModel(rootTest, null);
+            var isActiveRoot = ReferenceEquals(activeRoot?.Model, rootTest.Model);
+            rootItem.IsBranchExpanded = isActiveRoot && rootItem.IsMultipleRoot;
 
-            if (!ReferenceEquals(activeRoot?.Model, rootTest.Model) || !string.Equals(rootTest.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase))
+            if (rootItem.IsBranchExpanded)
             {
-                continue;
+                foreach (var subTest in rootTest.Limits)
+                {
+                    rootItem.SubTests.Add(new TestNavigationItemViewModel(rootTest, subTest));
+                }
             }
 
-            foreach (var subTest in rootTest.Limits)
-            {
-                navigationItems.Add(new TestNavigationItemViewModel(rootTest, subTest));
-            }
+            rootNavigationItems.Add(rootItem);
         }
 
-        ReplaceWith(TestNavigationItems, navigationItems);
+        ReplaceWith(TestNavigationItems, rootNavigationItems);
 
-        if (preferredSelection is null)
+        if (preferredSelection is null && SelectedTestItem is null)
         {
             return;
         }
 
-        var matchedSelection = TestNavigationItems.FirstOrDefault(item => item.Matches(preferredSelection.RootTest, preferredSelection.SubTestLimit));
+        TestNavigationItemViewModel? matchedSelection = null;
+        if (selectedSubTest is not null)
+        {
+            matchedSelection = TestNavigationItems
+                .Where(root => root.IsBranchExpanded)
+                .SelectMany(root => root.SubTests)
+                .FirstOrDefault(item => activeRoot is not null && item.Matches(activeRoot, selectedSubTest));
+        }
+
+        if (activeRoot is not null)
+        {
+            matchedSelection ??= TestNavigationItems.FirstOrDefault(item => item.Matches(activeRoot, null));
+        }
+
         if (!ReferenceEquals(SelectedTestItem, matchedSelection))
         {
             SelectedTestItem = matchedSelection;
+            return;
         }
+
+    }
+
+    private void UpdateNavigationSelectionState()
+    {
+        foreach (var rootItem in TestNavigationItems)
+        {
+            rootItem.IsSelected = ReferenceEquals(rootItem, SelectedTestItem);
+            foreach (var subTest in rootItem.SubTests)
+            {
+                subTest.IsSelected = ReferenceEquals(subTest, SelectedTestItem);
+            }
+        }
+
     }
 
     private void ClearEditState()

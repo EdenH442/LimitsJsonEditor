@@ -29,10 +29,11 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasSelectedTest))]
     [NotifyPropertyChangedFor(nameof(IsMultipleTestSelected))]
     [NotifyPropertyChangedFor(nameof(IsSingleTestSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSubTestSelected))]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
-    private TestItemViewModel? selectedTest;
+    private TestNavigationItemViewModel? selectedTestItem;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
@@ -58,8 +59,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         _filteringSelectionService = filteringSelectionService;
 
         FilteredSequences = new ObservableCollection<SequenceItemViewModel>();
-        SelectedSequenceTests = new ObservableCollection<TestItemViewModel>();
-        LimitsInSelectedTest = new ObservableCollection<Limit>();
+        TestNavigationItems = new ObservableCollection<TestNavigationItemViewModel>();
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -81,9 +81,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public ObservableCollection<SequenceItemViewModel> FilteredSequences { get; }
 
-    public ObservableCollection<TestItemViewModel> SelectedSequenceTests { get; }
-
-    public ObservableCollection<Limit> LimitsInSelectedTest { get; }
+    public ObservableCollection<TestNavigationItemViewModel> TestNavigationItems { get; }
 
     public string CurrentFilePath
     {
@@ -93,13 +91,17 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public LimitaDocument LoadedDocument => _sharedFileContext.LoadedDocument;
 
+    public TestItemViewModel? SelectedTest => SelectedTestItem?.RootTest;
+
     public bool HasSelectedSequence => SelectedSequence is not null;
 
-    public bool HasSelectedTest => SelectedTest is not null;
+    public bool HasSelectedTest => SelectedTestItem is not null;
 
     public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
 
     public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, "SINGLE", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsSubTestSelected => SelectedTestItem?.IsSubTest == true;
 
     public bool HasEditableLimit => EditableLimit is not null;
 
@@ -127,13 +129,12 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
 
         var tests = _filteringSelectionService.BuildTestsForSequence(value);
-        ReplaceWith(SelectedSequenceTests, tests);
-        StatusMessage = $"Loaded {SelectedSequenceTests.Count} test(s) from sequence '{value.Name}'.";
+        RebuildTestNavigation(tests, null);
+        StatusMessage = $"Loaded {tests.Count} test(s) from sequence '{value.Name}'.";
     }
 
-    partial void OnSelectedTestChanged(TestItemViewModel? value)
+    partial void OnSelectedTestItemChanged(TestNavigationItemViewModel? value)
     {
-        LimitsInSelectedTest.Clear();
         SelectedLimit = null;
 
         if (value is null)
@@ -143,16 +144,18 @@ public sealed partial class MainEditorViewModel : ObservableObject
             return;
         }
 
-        var limits = _filteringSelectionService.BuildLimitsForTest(value);
-        ReplaceWith(LimitsInSelectedTest, limits);
-
-        if (IsSingleTestSelected)
+        if (value.IsSubTest)
         {
-            SelectedLimit = value.Limits.FirstOrDefault();
+            SelectedLimit = value.SubTestLimit;
+        }
+        else if (IsSingleTestSelected)
+        {
+            SelectedLimit = value.RootTest.Limits.FirstOrDefault();
         }
 
         SyncEditableFromSelection();
-        StatusMessage = $"Loaded {LimitsInSelectedTest.Count} limit(s) from test '{value.Name}'.";
+        RebuildTestNavigation(_filteringSelectionService.BuildTestsForSequence(SelectedSequence), value);
+        StatusMessage = $"Selected {(value.IsRoot ? "test" : "sub-test")} '{value.DisplayName}'.";
     }
 
 
@@ -267,7 +270,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
             return SelectedTest.Limits.FirstOrDefault();
         }
 
-        if (IsMultipleTestSelected)
+        if (IsMultipleTestSelected && IsSubTestSelected)
         {
             return SelectedLimit;
         }
@@ -296,9 +299,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void ResetTestAndLimitSelection()
     {
-        SelectedSequenceTests.Clear();
-        LimitsInSelectedTest.Clear();
-        SelectedTest = null;
+        TestNavigationItems.Clear();
+        SelectedTestItem = null;
         SelectedLimit = null;
     }
 
@@ -322,6 +324,44 @@ public sealed partial class MainEditorViewModel : ObservableObject
         _targetLimit = targetLimit;
         EditableLimit = EditableLimitViewModel.FromModel(targetLimit);
         OnPropertyChanged(nameof(HasPendingChanges));
+    }
+
+    private void RebuildTestNavigation(IReadOnlyList<TestItemViewModel> rootTests, TestNavigationItemViewModel? preferredSelection)
+    {
+        var activeRoot = preferredSelection?.RootTest;
+        if (activeRoot is null && SelectedTestItem is not null)
+        {
+            activeRoot = SelectedTestItem.RootTest;
+        }
+
+        var navigationItems = new List<TestNavigationItemViewModel>();
+        foreach (var rootTest in rootTests)
+        {
+            navigationItems.Add(new TestNavigationItemViewModel(rootTest, null));
+
+            if (!ReferenceEquals(activeRoot?.Model, rootTest.Model) || !string.Equals(rootTest.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            foreach (var subTest in rootTest.Limits)
+            {
+                navigationItems.Add(new TestNavigationItemViewModel(rootTest, subTest));
+            }
+        }
+
+        ReplaceWith(TestNavigationItems, navigationItems);
+
+        if (preferredSelection is null)
+        {
+            return;
+        }
+
+        var matchedSelection = TestNavigationItems.FirstOrDefault(item => item.Matches(preferredSelection.RootTest, preferredSelection.SubTestLimit));
+        if (!ReferenceEquals(SelectedTestItem, matchedSelection))
+        {
+            SelectedTestItem = matchedSelection;
+        }
     }
 
     private void ClearEditState()

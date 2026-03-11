@@ -189,7 +189,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
 
         SyncEditableFromSelection();
-        RebuildTestNavigation(_filteringSelectionService.BuildTestsForSequence(SelectedSequence), value);
         UpdateNavigationSelectionState();
         if (value.IsRoot)
         {
@@ -410,12 +409,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
             var isActiveRoot = ReferenceEquals(activeRoot?.Model, rootTest.Model);
             rootItem.IsBranchExpanded = isActiveRoot && rootItem.IsMultipleRoot;
 
-            if (rootItem.IsBranchExpanded)
+            foreach (var subTest in rootTest.Limits)
             {
-                foreach (var subTest in rootTest.Limits)
-                {
-                    rootItem.SubTests.Add(new TestNavigationItemViewModel(rootTest, subTest));
-                }
+                rootItem.SubTests.Add(new TestNavigationItemViewModel(rootTest, subTest));
             }
 
             rootNavigationItems.Add(rootItem);
@@ -432,7 +428,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         if (selectedSubTest is not null)
         {
             matchedSelection = TestNavigationItems
-                .Where(root => root.IsBranchExpanded)
                 .SelectMany(root => root.SubTests)
                 .FirstOrDefault(item => activeRoot is not null && item.Matches(activeRoot, selectedSubTest));
         }
@@ -442,25 +437,31 @@ public sealed partial class MainEditorViewModel : ObservableObject
             matchedSelection ??= TestNavigationItems.FirstOrDefault(item => item.Matches(activeRoot, null));
         }
 
-        if (!ReferenceEquals(SelectedTestItem, matchedSelection))
+        if (matchedSelection is not null)
         {
             SelectedTestItem = matchedSelection;
-            return;
+            UpdateNavigationSelectionState();
         }
-
     }
 
     private void UpdateNavigationSelectionState()
     {
+        var selectedRootModel = SelectedTestItem?.RootTest.Model;
+
         foreach (var rootItem in TestNavigationItems)
         {
-            rootItem.IsSelected = ReferenceEquals(rootItem, SelectedTestItem);
+            var isSelectedRoot = SelectedTestItem?.IsRoot == true && ReferenceEquals(rootItem.RootTest.Model, SelectedTestItem.RootTest.Model);
+            rootItem.IsSelected = isSelectedRoot;
+            rootItem.IsBranchExpanded = ReferenceEquals(rootItem.RootTest.Model, selectedRootModel) && rootItem.IsMultipleRoot;
+
             foreach (var subTest in rootItem.SubTests)
             {
-                subTest.IsSelected = ReferenceEquals(subTest, SelectedTestItem);
+                var isSelectedSubTest = SelectedTestItem?.IsSubTest == true
+                    && ReferenceEquals(subTest.RootTest.Model, SelectedTestItem.RootTest.Model)
+                    && ReferenceEquals(subTest.SubTestLimit, SelectedTestItem.SubTestLimit);
+                subTest.IsSelected = isSelectedSubTest;
             }
         }
-
     }
 
     private void ClearEditState()

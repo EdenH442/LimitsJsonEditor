@@ -9,6 +9,54 @@
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
+            <Style x:Key="TestNavigationListBoxItemStyle" TargetType="ListBoxItem">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <ContentPresenter />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="TestNavigationRowBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                        <Setter Property="Background" Value="#15000000" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                        <Setter Property="Background" Value="#1A3F51B5" />
+                        <Setter Property="BorderBrush" Value="#7A3F51B5" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="SubTestNavigationRowBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="#0D000000" />
+                <Setter Property="BorderBrush" Value="#26000000" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True">
+                        <Setter Property="Background" Value="#16000000" />
+                        <Setter Property="BorderBrush" Value="#32000000" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                        <Setter Property="Background" Value="#1E3F51B5" />
+                        <Setter Property="BorderBrush" Value="#8A3F51B5" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
             <Style x:Key="SectionCardStyle" TargetType="materialDesign:Card">
                 <Setter Property="Padding" Value="18" />
                 <Setter Property="UniformCornerRadius" Value="12" />
@@ -67,7 +115,7 @@
 
                 <TextBlock Grid.Row="2"
                            Style="{StaticResource SubtleTextStyle}"
-                           Text="Search and choose a sequence to inspect related tests." />
+                           Text="Search and choose a sequence to inspect" />
 
                 <Grid Grid.Row="4">
                     <Grid.RowDefinitions>
@@ -146,13 +194,80 @@
 
                 <TextBlock Grid.Row="2"
                            Style="{StaticResource SubtleTextStyle}"
-                           Text="Tests are shown for the currently selected sequence." />
+                           Text="Tests for the currently selected sequence." />
 
                 <Border Grid.Row="4" Style="{StaticResource ListPanelBorderStyle}">
-                    <ListBox ItemsSource="{Binding SelectedSequenceTests}"
+                    <ListBox ItemsSource="{Binding TestNavigationItems}"
                              BorderThickness="0"
-                             DisplayMemberPath="Name"
-                             SelectedItem="{Binding SelectedTest}" />
+                             ItemContainerStyle="{StaticResource TestNavigationListBoxItemStyle}"
+                             SelectedItem="{Binding SelectedRootTestItem, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border Padding="8,6"
+                                            Margin="0,0,0,4"
+                                            CornerRadius="6"
+                                            Style="{StaticResource TestNavigationRowBorderStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon Grid.Column="0"
+                                                                     Width="14"
+                                                                     Height="14"
+                                                                     VerticalAlignment="Center"
+                                                                     Kind="PlaylistCheck" />
+                                            <TextBlock Grid.Column="2"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="13"
+                                                       Text="{Binding DisplayName}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+                                    </Border>
+
+                                    <ListBox Margin="24,0,0,6"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             ItemContainerStyle="{StaticResource TestNavigationListBoxItemStyle}"
+                                             ItemsSource="{Binding SubTests}"
+                                             SelectedItem="{Binding DataContext.SelectedTestItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                                             Visibility="{Binding IsBranchExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="8,4"
+                                                        Margin="0,1,0,3"
+                                                        CornerRadius="5"
+                                                        Style="{StaticResource SubTestNavigationRowBorderStyle}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="6" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon Grid.Column="0"
+                                                                                 Width="12"
+                                                                                 Height="12"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                                                 Kind="SubdirectoryArrowRight" />
+                                                        <TextBlock Grid.Column="2"
+                                                                   Margin="{Binding ItemMargin}"
+                                                                   FontSize="12"
+                                                                   Opacity="0.92"
+                                                                   Text="{Binding DisplayName}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Border>
 
                 <WrapPanel Grid.Row="6" Orientation="Horizontal">
@@ -179,8 +294,6 @@
                     <RowDefinition Height="8" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="10" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="14" />
                     <RowDefinition Height="Auto" />
@@ -198,14 +311,9 @@
 
                 <TextBlock Grid.Row="2"
                            Style="{StaticResource SubtleTextStyle}"
-                           Text="Review and edit selected limit values before saving the file." />
+                           Text="Review and edit values of test. Apply doesnt save on file" />
 
-                <TextBlock Grid.Row="4"
-                           FontWeight="SemiBold"
-                           Text="Limit item (MULTIPLE tests)"
-                           Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
-                <Border Grid.Row="6"
+                <Border Grid.Row="4"
                         Padding="10"
                         BorderBrush="{DynamicResource MaterialDesignDivider}"
                         BorderThickness="1"
@@ -214,82 +322,107 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="8" />
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ListBox Grid.Row="0"
-                                 Height="92"
-                                 BorderThickness="0"
-                                 ItemsSource="{Binding LimitsInSelectedTest}"
-                                 SelectedItem="{Binding SelectedLimit}"
-                                 Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Margin="0,0,0,4"
-                                               Text="{Binding MultipleStepNameCheck, TargetNullValue='(unnamed)'}"
-                                               TextTrimming="CharacterEllipsis" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <TextBlock Style="{StaticResource SubtleTextStyle}"
+                                   Text="Select a test or sub-test in the Tests panel to edit details."
+                                   Visibility="{Binding NotHasSelectedTest, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                        <Grid Grid.Row="2" IsEnabled="{Binding HasEditableLimit}">
+                        <Grid Visibility="{Binding HasSelectedTest, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="6" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="6" />
+                                <RowDefinition Height="12" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" MinWidth="132" />
-                                <ColumnDefinition Width="10" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="Multiple Step"
-                                       Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            <TextBox Grid.Row="0"
-                                     Grid.Column="2"
-                                     Text="{Binding EditableLimit.MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
-                                     Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            <Grid Grid.Row="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="132" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Limit Type" />
-                            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableLimit.LimitType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Test Name" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="2"
+                                         Text="{Binding EditableStepName, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
-                            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Test Type" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="2"
+                                         Text="{Binding EditableStepType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            </Grid>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Threshold Type" />
-                            <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            <Grid Grid.Row="2"
+                                  Visibility="{Binding IsSubTestItemSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  IsEnabled="{Binding HasEditableLimit}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="132" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sub-Test Name" />
+                                <TextBox Grid.Column="2"
+                                         Text="{Binding EditableLimit.MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            </Grid>
 
-                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Expected" />
-                            <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            <Grid Grid.Row="4"
+                                  IsEnabled="{Binding HasEditableLimit}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="132" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="10" Grid.Column="0" Text="Low" />
-                            <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.Low, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Limit Type" />
+                                <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding EditableLimit.LimitType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-                            <TextBlock Grid.Row="12" Grid.Column="0" Text="High" />
-                            <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.High, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Comparison" />
+                                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-                            <TextBlock Grid.Row="14" Grid.Column="0" Text="Unit" />
-                            <TextBox Grid.Row="14" Grid.Column="2" Text="{Binding EditableLimit.Unit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Threshold Type" />
+                                <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Expected" />
+                                <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Low" />
+                                <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.Low, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="10" Grid.Column="0" Text="High" />
+                                <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.High, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="12" Grid.Column="0" Text="Unit" />
+                                <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.Unit, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Border>
 
-                <WrapPanel Grid.Row="8" HorizontalAlignment="Right" Orientation="Horizontal">
+                <WrapPanel Grid.Row="6" HorizontalAlignment="Right" Orientation="Horizontal">
                     <Button Style="{StaticResource SectionActionButtonStyle}" Command="{Binding CancelEditCommand}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="CloseCircleOutline" />

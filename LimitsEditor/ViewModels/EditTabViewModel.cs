@@ -16,8 +16,6 @@ public sealed partial class EditTabViewModel : ObservableObject
 
     public bool HasEditableLimit => EditableLimit is not null;
 
-    public bool IsSubTestItemSelected => true;
-
     public Action? SaveRequested { get; set; }
 
     public Action? CancelRequested { get; set; }

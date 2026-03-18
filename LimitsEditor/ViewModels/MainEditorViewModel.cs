@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
+using System.Windows;
 
 namespace LimitsEditor.ViewModels;
 
@@ -10,6 +11,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 {
     private readonly SharedFileContext _sharedFileContext;
     private readonly EditorFilteringSelectionService _filteringSelectionService;
+    private readonly IAddTestDialogService _addTestDialogService;
     private Step? _targetTest;
     private Limit? _targetLimit;
 
@@ -23,6 +25,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedSequence))]
     [NotifyPropertyChangedFor(nameof(CanDeleteSequence))]
+    [NotifyCanExecuteChangedFor(nameof(AddTestCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteSequenceCommand))]
     private SequenceItemViewModel? selectedSequence;
 
@@ -68,10 +71,12 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public MainEditorViewModel(
         SharedFileContext sharedFileContext,
-        EditorFilteringSelectionService filteringSelectionService)
+        EditorFilteringSelectionService filteringSelectionService,
+        IAddTestDialogService addTestDialogService)
     {
         _sharedFileContext = sharedFileContext;
         _filteringSelectionService = filteringSelectionService;
+        _addTestDialogService = addTestDialogService;
 
         FilteredSequences = new ObservableCollection<SequenceItemViewModel>();
         TestNavigationItems = new ObservableCollection<TestNavigationItemViewModel>();
@@ -107,6 +112,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     public LimitaDocument LoadedDocument => _sharedFileContext.LoadedDocument;
 
     public TestItemViewModel? SelectedTest => SelectedTestItem?.RootTest;
+
+    public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { "SINGLE", "MULTIPLE" };
 
     [ObservableProperty]
     private TestNavigationItemViewModel? selectedRootTestItem;
@@ -251,10 +258,32 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Delete Sequence placeholder (not implemented yet).";
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAddTest))]
     private void AddTest()
     {
-        StatusMessage = "Add Test workflow placeholder (not implemented yet).";
+        if (SelectedSequence is null)
+        {
+            MessageBox.Show("Select a sequence before adding a test.", "Add Test", MessageBoxButton.OK, MessageBoxImage.Information);
+            StatusMessage = "Select a sequence before adding a test.";
+            return;
+        }
+
+        var createdStep = _addTestDialogService.ShowDialog(SelectedSequence.Name);
+        if (createdStep is null)
+        {
+            StatusMessage = "Add test canceled.";
+            return;
+        }
+
+        SelectedSequence.Model.StepList.Add(createdStep);
+
+        var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+        RebuildTestNavigation(tests, null);
+        SelectedTestItem = TestNavigationItems.FirstOrDefault(item => ReferenceEquals(item.RootTest.Model, createdStep));
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Added test '{createdStep.StepName}' to sequence '{SelectedSequence.Name}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanDeleteTest))]
@@ -295,6 +324,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
         SyncEditableFromSelection();
         StatusMessage = "Reverted unsaved changes in details panel.";
     }
+
+    private bool CanAddTest() => SelectedSequence is not null;
 
     private bool CanSaveChanges() => SelectedTestItem is not null && HasPendingChanges;
 

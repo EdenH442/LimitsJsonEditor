@@ -3,8 +3,9 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LimitsEditor.Services;
 using LimitsEditor.Validation;
+using AddTestDialogSubmission = LimitsEditor.Services.AddTestDialogSubmission;
+using AddTestLimitSubmission = LimitsEditor.Services.AddTestLimitSubmission;
 
 namespace LimitsEditor.ViewModels;
 

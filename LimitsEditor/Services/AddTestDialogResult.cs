@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace LimitsEditor.Services;
 
 public sealed record AddTestDialogResult(bool IsConfirmed, AddTestDialogSubmission? Submission)

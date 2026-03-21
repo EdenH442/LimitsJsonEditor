@@ -20,6 +20,6 @@ public sealed record AddTestLimitSubmission(
     string ComparisonType,
     string ThresholdType,
     string ExpectedRes,
-    string Low,
-    string High,
+    double? Low,
+    double? High,
     string Unit);

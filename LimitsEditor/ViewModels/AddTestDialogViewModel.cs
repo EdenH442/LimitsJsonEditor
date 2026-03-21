@@ -111,6 +111,8 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     partial void OnEditableStepTypeChanged(string value)
     {
+        HasAttemptedConfirm = false;
+
         if (string.Equals(value, "MULTIPLE", StringComparison.OrdinalIgnoreCase))
         {
             RestoreMultipleSelection();

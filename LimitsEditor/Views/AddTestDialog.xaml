@@ -81,37 +81,56 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock FontWeight="SemiBold" Text="Sub-Tests" />
+                        <DockPanel Grid.Row="0" LastChildFill="False">
+                            <TextBlock FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Text="Sub-Tests" />
+                            <TextBlock Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource SubtleTextStyle}"
+                                       Text="{Binding SubTests.Count, StringFormat={}({0})}" />
+                        </DockPanel>
 
                         <Border Grid.Row="2"
                                 Padding="8"
                                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                                 BorderThickness="1"
                                 CornerRadius="8">
-                            <ListBox ItemsSource="{Binding SubTests}"
-                                     BorderThickness="0"
-                                     SelectedItem="{Binding SelectedSubTest, Mode=TwoWay}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,0,0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0"
-                                                       VerticalAlignment="Center"
-                                                       Text="{Binding DisplayName}" />
-                                            <Button Grid.Column="2"
-                                                    Padding="8,4"
-                                                    Command="{Binding DataContext.DeleteSubTestCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                    CommandParameter="{Binding}">
-                                                <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteOutline" />
-                                            </Button>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                            <Grid>
+                                <ListBox ItemsSource="{Binding SubTests}"
+                                         BorderThickness="0"
+                                         SelectedItem="{Binding SelectedSubTest, Mode=TwoWay}"
+                                         Visibility="{Binding HasSubTests, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           VerticalAlignment="Center"
+                                                           Text="{Binding DisplayName}" />
+                                                <Button Grid.Column="2"
+                                                        Padding="8,4"
+                                                        Command="{Binding DataContext.DeleteSubTestCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}">
+                                                    <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteOutline" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Margin="4"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Center"
+                                           Style="{StaticResource SubtleTextStyle}"
+                                           Text="No sub-tests yet. Add one to start composing this MULTIPLE test."
+                                           Visibility="{Binding HasSubTests, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                            </Grid>
                         </Border>
 
                         <Button Grid.Row="4"

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
@@ -8,12 +9,14 @@ namespace LimitsEditor.ViewModels;
 public sealed partial class AddTestDialogViewModel : ObservableObject
 {
     private readonly EditableLimitViewModel _singleTestLimit = new();
+    private AddTestSubTestItemViewModel? _lastSelectedMultipleSubTest;
 
     public AddTestDialogViewModel(string sequenceName)
     {
         SequenceName = sequenceName;
         availableStepTypes = new[] { "SINGLE", "MULTIPLE" };
         EditableLimit = _singleTestLimit;
+        SubTests.CollectionChanged += OnSubTestsCollectionChanged;
     }
 
     public string SequenceName { get; }
@@ -26,6 +29,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ShowSubTestsSection))]
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
+    [NotifyPropertyChangedFor(nameof(HasSubTests))]
     private string editableStepType = "SINGLE";
 
     [ObservableProperty]
@@ -54,32 +58,44 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     public bool HasEditableLimit => EditableLimit is not null;
 
+    public bool HasSubTests => SubTests.Count > 0;
+
     public event EventHandler<bool?>? CloseRequested;
 
     partial void OnEditableStepTypeChanged(string value)
     {
         if (string.Equals(value, "MULTIPLE", StringComparison.OrdinalIgnoreCase))
         {
-            if (SubTests.Count == 0)
-            {
-                AddSubTest();
-                return;
-            }
-
-            SelectedSubTest ??= SubTests[0];
-            EditableLimit = SelectedSubTest.EditableLimit;
+            RestoreMultipleSelection();
+            StatusMessage = HasSubTests
+                ? "Select a sub-test to edit, or add another sub-test."
+                : "Add a sub-test to begin building this MULTIPLE test.";
             return;
+        }
+
+        if (SelectedSubTest is not null)
+        {
+            _lastSelectedMultipleSubTest = SelectedSubTest;
         }
 
         SelectedSubTest = null;
         EditableLimit = _singleTestLimit;
+        StatusMessage = "Editing root fields for a SINGLE test.";
     }
 
     partial void OnSelectedSubTestChanged(AddTestSubTestItemViewModel? value)
     {
+        if (value is not null)
+        {
+            _lastSelectedMultipleSubTest = value;
+        }
+
         if (IsMultipleTest)
         {
             EditableLimit = value?.EditableLimit;
+            StatusMessage = value is null
+                ? "Select a sub-test to edit, or add a new one."
+                : $"Editing sub-test '{value.DisplayName}'.";
         }
     }
 
@@ -88,8 +104,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         var subTest = new AddTestSubTestItemViewModel(new EditableLimitViewModel());
         SubTests.Add(subTest);
-        SelectedSubTest = subTest;
-        EditableLimit = subTest.EditableLimit;
+        SelectSubTest(subTest);
         StatusMessage = $"Added sub-test ({SubTests.Count} total).";
     }
 
@@ -107,17 +122,30 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
             return;
         }
 
-        SubTests.RemoveAt(index);
+        var wasSelected = ReferenceEquals(SelectedSubTest, subTest);
+        var nextSelection = wasSelected
+            ? GetAdjacentSubTest(index)
+            : SelectedSubTest;
 
-        if (SelectedSubTest == subTest)
+        if (ReferenceEquals(_lastSelectedMultipleSubTest, subTest))
         {
-            SelectedSubTest = SubTests.Count == 0
-                ? null
-                : SubTests[Math.Min(index, SubTests.Count - 1)];
+            _lastSelectedMultipleSubTest = nextSelection;
         }
 
-        EditableLimit = SelectedSubTest?.EditableLimit;
-        StatusMessage = "Removed sub-test.";
+        SubTests.RemoveAt(index);
+
+        if (wasSelected)
+        {
+            SelectSubTest(nextSelection);
+        }
+        else
+        {
+            SyncEditableLimit();
+        }
+
+        StatusMessage = SubTests.Count == 0
+            ? "Removed the last sub-test. Add a sub-test to continue building this MULTIPLE test."
+            : $"Removed sub-test ({SubTests.Count} remaining).";
     }
 
     private bool CanDeleteSubTest(AddTestSubTestItemViewModel? subTest) => subTest is not null;
@@ -174,4 +202,66 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
         return null;
     }
 
+    private void OnSubTestsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(HasSubTests));
+
+        if (SelectedSubTest is not null && !SubTests.Contains(SelectedSubTest))
+        {
+            SelectedSubTest = null;
+        }
+
+        if (_lastSelectedMultipleSubTest is not null && !SubTests.Contains(_lastSelectedMultipleSubTest))
+        {
+            _lastSelectedMultipleSubTest = null;
+        }
+
+        if (IsMultipleTest)
+        {
+            SyncEditableLimit();
+        }
+    }
+
+    private void RestoreMultipleSelection()
+    {
+        var targetSelection = _lastSelectedMultipleSubTest is not null && SubTests.Contains(_lastSelectedMultipleSubTest)
+            ? _lastSelectedMultipleSubTest
+            : SubTests.FirstOrDefault();
+
+        SelectSubTest(targetSelection);
+    }
+
+    private void SelectSubTest(AddTestSubTestItemViewModel? subTest)
+    {
+        if (ReferenceEquals(SelectedSubTest, subTest))
+        {
+            SyncEditableLimit();
+            return;
+        }
+
+        SelectedSubTest = subTest;
+    }
+
+    private AddTestSubTestItemViewModel? GetAdjacentSubTest(int deletedIndex)
+    {
+        if (SubTests.Count <= 1)
+        {
+            return null;
+        }
+
+        var candidateIndex = deletedIndex < SubTests.Count - 1
+            ? deletedIndex + 1
+            : deletedIndex - 1;
+
+        return candidateIndex >= 0 && candidateIndex < SubTests.Count
+            ? SubTests[candidateIndex]
+            : null;
+    }
+
+    private void SyncEditableLimit()
+    {
+        EditableLimit = IsMultipleTest
+            ? SelectedSubTest?.EditableLimit
+            : _singleTestLimit;
+    }
 }

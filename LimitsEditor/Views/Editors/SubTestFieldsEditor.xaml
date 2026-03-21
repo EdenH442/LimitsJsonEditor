@@ -17,26 +17,45 @@
 
         <Grid Grid.Row="0"
               Visibility="{Binding IsSubTestItemSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" MinWidth="132" />
                 <ColumnDefinition Width="10" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Sub-Test Name" />
-            <TextBox Grid.Column="2"
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Sub-Test Name" />
+            <TextBox Grid.Row="0"
+                     Grid.Column="2"
                      Text="{Binding EditableLimit.MultipleStepNameCheck, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="2"
+                       Grid.Column="2"
+                       Foreground="IndianRed"
+                       Style="{StaticResource SubtleTextStyle}"
+                       Text="{Binding CurrentSubTestNameError}" />
         </Grid>
 
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="6" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="6" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="6" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="6" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="6" />
                 <RowDefinition Height="Auto" />
@@ -51,24 +70,44 @@
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Limit Type" />
             <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding EditableLimit.LimitType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="2"
+                       Grid.Column="2"
+                       Foreground="IndianRed"
+                       Style="{StaticResource SubtleTextStyle}"
+                       Text="{Binding CurrentLimitTypeError}" />
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Comparison" />
-            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
+            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="6"
+                       Grid.Column="2"
+                       Foreground="IndianRed"
+                       Style="{StaticResource SubtleTextStyle}"
+                       Text="{Binding CurrentComparisonTypeError}" />
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Threshold Type" />
-            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="8" Grid.Column="0" Text="Threshold Type" />
+            <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.ThresholdType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-            <TextBlock Grid.Row="6" Grid.Column="0" Text="Expected" />
-            <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="10" Grid.Column="0" Text="Expected" />
+            <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.ExpectedRes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-            <TextBlock Grid.Row="8" Grid.Column="0" Text="Low" />
-            <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableLimit.Low, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="12" Grid.Column="0" Text="Low" />
+            <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.Low, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="14"
+                       Grid.Column="2"
+                       Foreground="IndianRed"
+                       Style="{StaticResource SubtleTextStyle}"
+                       Text="{Binding CurrentResultError}" />
 
-            <TextBlock Grid.Row="10" Grid.Column="0" Text="High" />
-            <TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableLimit.High, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="16" Grid.Column="0" Text="High" />
+            <TextBox Grid.Row="16" Grid.Column="2" Text="{Binding EditableLimit.High, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
-            <TextBlock Grid.Row="12" Grid.Column="0" Text="Unit" />
-            <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableLimit.Unit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="18" Grid.Column="0" Text="Unit" />
+            <TextBox Grid.Row="18" Grid.Column="2" Text="{Binding EditableLimit.Unit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="20"
+                       Grid.Column="2"
+                       Foreground="IndianRed"
+                       Style="{StaticResource SubtleTextStyle}"
+                       Text="{Binding CurrentRangeError}" />
         </Grid>
     </Grid>
 </UserControl>

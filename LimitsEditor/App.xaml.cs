@@ -39,6 +39,7 @@ public partial class App : Application
         services.AddSingleton<IAddTestDialogService, AddTestDialogService>();
         services.AddSingleton<IFileValidationService, FileValidationService>();
         services.AddSingleton<ITestItemValidator, TestItemValidator>();
+        services.AddSingleton<IAddTestCreationValidator, AddTestCreationValidator>();
 
         services.AddSingleton<AddTabViewModel>();
         services.AddSingleton<FindTabViewModel>();

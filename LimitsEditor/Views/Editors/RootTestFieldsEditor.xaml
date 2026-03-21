@@ -7,7 +7,11 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="6" />
+            <RowDefinition Height="4" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="4" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -20,12 +24,22 @@
         <TextBox Grid.Row="0"
                  Grid.Column="2"
                  Text="{Binding EditableStepName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+        <TextBlock Grid.Row="2"
+                   Grid.Column="2"
+                   Foreground="IndianRed"
+                   Style="{StaticResource SubtleTextStyle}"
+                   Text="{Binding StepNameError}" />
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Test Type" />
-        <ComboBox Grid.Row="2"
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Test Type" />
+        <ComboBox Grid.Row="4"
                   Grid.Column="2"
                   IsEditable="True"
                   ItemsSource="{Binding AvailableStepTypes}"
                   Text="{Binding EditableStepType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+        <TextBlock Grid.Row="6"
+                   Grid.Column="2"
+                   Foreground="IndianRed"
+                   Style="{StaticResource SubtleTextStyle}"
+                   Text="{Binding StepTypeError}" />
     </Grid>
 </UserControl>

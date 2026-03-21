@@ -17,6 +17,12 @@ public sealed partial class AddTestSubTestItemViewModel : ObservableObject
         ? "(unnamed sub-test)"
         : EditableLimit.MultipleStepNameCheck;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    private string validationMessage = string.Empty;
+
+    public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
+
     private void OnEditableLimitPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(EditableLimitViewModel.MultipleStepNameCheck))

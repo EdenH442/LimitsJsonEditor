@@ -51,21 +51,25 @@
                         <DataTemplate>
                             <materialDesign:Card Margin="0,0,0,8" Padding="10" UniformCornerRadius="8">
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="10" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
 
-                                    <TextBox Grid.Column="0" Margin="0,0,8,0" materialDesign:HintAssist.Hint="MultipleStepNameCheck" Text="{Binding MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="1" Margin="0,0,8,0" materialDesign:HintAssist.Hint="LimitType" Text="{Binding LimitType, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="2" Margin="0,0,8,0" materialDesign:HintAssist.Hint="ComparisonType" Text="{Binding ComparisonType, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="3" Margin="0,0,8,0" materialDesign:HintAssist.Hint="Low" Text="{Binding Low, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBox Grid.Column="4" Margin="0,0,8,0" materialDesign:HintAssist.Hint="High" Text="{Binding High, UpdateSourceTrigger=PropertyChanged}" />
-                                    <Button Grid.Column="5"
+                                    <WrapPanel Grid.Row="0" ItemWidth="170">
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="MultipleStepNameCheck" Text="{Binding MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="LimitType" Text="{Binding LimitType, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="ComparisonType" Text="{Binding ComparisonType, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="ThresholdType" Text="{Binding ThresholdType, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="ExpectedRes" Text="{Binding ExpectedRes, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="Low" Text="{Binding Low, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="High" Text="{Binding High, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="Unit" Text="{Binding Unit, UpdateSourceTrigger=PropertyChanged}" />
+                                    </WrapPanel>
+
+                                    <Button Grid.Row="2"
+                                            HorizontalAlignment="Right"
                                             Padding="8,4"
                                             Command="{Binding DataContext.RemoveLimitCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                             CommandParameter="{Binding}">

@@ -40,11 +40,13 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 OnPropertyChanged(nameof(SelectedFilePath));
                 SaveFileCommand.NotifyCanExecuteChanged();
+                DiscardUnsavedChangesCommand.NotifyCanExecuteChanged();
             }
 
             if (args.PropertyName == nameof(MainEditorViewModel.IsDocumentDirty))
             {
                 SaveFileCommand.NotifyCanExecuteChanged();
+                DiscardUnsavedChangesCommand.NotifyCanExecuteChanged();
             }
         };
 
@@ -103,15 +105,13 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        var loadResult = await _jsonFileService.LoadAsync(SelectedFilePath);
+        var loadResult = await ReloadSelectedFileFromDiskAsync();
         if (loadResult.Status != OperationStatus.Success || loadResult.Document is null)
         {
             StatusMessage = loadResult.Message;
             return;
         }
 
-        _sharedFileContext.LoadedDocument = loadResult.Document;
-        MainEditor.IsDocumentDirty = false;
         StatusMessage = $"Opened JSON file with {_sharedFileContext.LoadedDocument.Sequences.Count} sequence(s).";
     }
 
@@ -144,6 +144,48 @@ public sealed partial class MainViewModel : ObservableObject
         return MainEditor.IsDocumentDirty &&
             !string.IsNullOrWhiteSpace(SelectedFilePath) &&
             MainEditor.LoadedDocument is not null;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanDiscardUnsavedChanges))]
+    private async Task DiscardUnsavedChangesAsync()
+    {
+        var validation = _fileValidationService.ValidateFileForLoad(SelectedFilePath);
+        if (!validation.IsValid)
+        {
+            var message = validation.Issues.FirstOrDefault()?.Message ?? "Unable to discard unsaved changes.";
+            StatusMessage = message;
+            MessageBox.Show(message, "Discard Unsaved Changes", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var loadResult = await ReloadSelectedFileFromDiskAsync();
+        if (loadResult.Status == OperationStatus.Success && loadResult.Document is not null)
+        {
+            StatusMessage = "Discarded unsaved changes and restored the saved file from disk.";
+            return;
+        }
+
+        StatusMessage = $"Discard failed. {loadResult.Message}";
+        MessageBox.Show(loadResult.Message, "Discard Unsaved Changes", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+
+    private bool CanDiscardUnsavedChanges()
+    {
+        return MainEditor.IsDocumentDirty &&
+            !string.IsNullOrWhiteSpace(SelectedFilePath) &&
+            MainEditor.LoadedDocument is not null;
+    }
+
+    private async Task<JsonLoadResult> ReloadSelectedFileFromDiskAsync()
+    {
+        var loadResult = await _jsonFileService.LoadAsync(SelectedFilePath);
+        if (loadResult.Status == OperationStatus.Success && loadResult.Document is not null)
+        {
+            _sharedFileContext.LoadedDocument = loadResult.Document;
+            MainEditor.IsDocumentDirty = false;
+        }
+
+        return loadResult;
     }
 
     [RelayCommand]

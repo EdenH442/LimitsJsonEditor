@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:LimitsEditor.Views"
         mc:Ignorable="d"
         Title="Limits JSON Editor"
-        Height="860"
+        Height="960"
         Width="1360"
         MinHeight="700"
         MinWidth="1080"
@@ -84,18 +84,29 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FileDownloadOutline" Width="18" Height="18" Margin="0,0,6,0" />
                         <TextBlock Text="Open" />
-                    </StackPanel>
-                </Button>
+                        </StackPanel>
+                    </Button>
 
-                <Button Grid.Column="3"
-                        Padding="14,6"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        Command="{Binding SaveFileCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ContentSaveOutline" Width="18" Height="18" Margin="0,0,6,0" />
-                        <TextBlock Text="Save File" />
-                    </StackPanel>
-                </Button>
+                <StackPanel Grid.Column="3"
+                            Orientation="Horizontal">
+                    <Button Margin="0,0,10,0"
+                            Padding="14,6"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding SaveFileCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSaveOutline" Width="18" Height="18" Margin="0,0,6,0" />
+                            <TextBlock Text="Save Edits" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Padding="14,6"
+                            Command="{Binding DiscardUnsavedChangesCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Restore" Width="18" Height="18" Margin="0,0,6,0" />
+                            <TextBlock Text="Discard Changes" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </materialDesign:Card>
 

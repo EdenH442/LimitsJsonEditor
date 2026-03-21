@@ -36,8 +36,11 @@ public partial class App : Application
         services.AddSingleton<IJsonFileService, JsonFileService>();
         services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<IJsonUpsertService, JsonUpsertService>();
+        services.AddSingleton<IAddTestDialogService, AddTestDialogService>();
+        services.AddSingleton<IConfirmationDialogService, ConfirmationDialogService>();
         services.AddSingleton<IFileValidationService, FileValidationService>();
         services.AddSingleton<ITestItemValidator, TestItemValidator>();
+        services.AddSingleton<IAddTestCreationValidator, AddTestCreationValidator>();
 
         services.AddSingleton<AddTabViewModel>();
         services.AddSingleton<FindTabViewModel>();

@@ -1,0 +1,227 @@
+<Window x:Class="LimitsEditor.Views.AddTestDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:editors="clr-namespace:LimitsEditor.Views.Editors"
+        mc:Ignorable="d"
+        Title="Add Test"
+        SizeToContent="WidthAndHeight"
+        MinWidth="860"
+        MaxHeight="860"
+        ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterOwner"
+        TextElement.FontSize="14"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}">
+    <Window.Resources>
+        <Style x:Key="DialogSectionBorderStyle" TargetType="Border">
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="DialogErrorTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtleTextStyle}">
+            <Setter Property="Foreground" Value="IndianRed" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="DialogHintTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtleTextStyle}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20"
+          Background="{DynamicResource MaterialDesignPaper}">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <materialDesign:Card Padding="18" UniformCornerRadius="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock FontSize="20" FontWeight="SemiBold" Text="Add Test" />
+                <TextBlock Grid.Row="2"
+                           Style="{StaticResource DialogHintTextStyle}"
+                           Text="Create a temporary test and confirm to append it to the current sequence." />
+
+                <DockPanel Grid.Row="4">
+                    <TextBlock FontWeight="SemiBold" Text="Sequence:" />
+                    <TextBlock Margin="8,0,0,0" Text="{Binding SequenceName}" />
+                </DockPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Row="2" Padding="18" UniformCornerRadius="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <editors:RootTestFieldsEditor Grid.Row="0" />
+
+                    <TextBlock Grid.Row="2"
+                               Style="{StaticResource DialogHintTextStyle}"
+                               Text="For SINGLE tests, edit the root fields below. For MULTIPLE tests, manage sub-tests and edit the selected sub-test." />
+
+                    <TextBlock Grid.Row="4"
+                               Style="{StaticResource DialogErrorTextStyle}"
+                               Text="{Binding SubTestsError}" />
+
+                    <Grid Grid.Row="6"
+                          Visibility="{Binding ShowSubTestsSection, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="280" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="8" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <DockPanel Grid.Row="0" LastChildFill="False">
+                                <TextBlock FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           Text="Sub-Tests" />
+                                <TextBlock Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource DialogHintTextStyle}"
+                                           Text="{Binding SubTests.Count, StringFormat={}({0})}" />
+                            </DockPanel>
+
+                            <Border Grid.Row="2"
+                                    Style="{StaticResource DialogSectionBorderStyle}"
+                                    Padding="8">
+                                <Grid>
+                                    <ListBox ItemsSource="{Binding SubTests}"
+                                             BorderThickness="0"
+                                             SelectedItem="{Binding SelectedSubTest, Mode=TwoWay}"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             Visibility="{Binding HasSubTests, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Row="0"
+                                                               Grid.Column="0"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding DisplayName}" />
+                                                    <Button Grid.Row="0"
+                                                            Grid.Column="2"
+                                                            Padding="8,4"
+                                                            Command="{Binding DataContext.DeleteSubTestCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteOutline" />
+                                                    </Button>
+                                                    <TextBlock Grid.Row="1"
+                                                               Grid.Column="0"
+                                                               Grid.ColumnSpan="3"
+                                                               Margin="0,4,0,0"
+                                                               Style="{StaticResource DialogErrorTextStyle}"
+                                                               Text="{Binding ValidationMessage}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <TextBlock Margin="4"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               Style="{StaticResource DialogHintTextStyle}"
+                                               Text="No sub-tests yet. Add one to start composing this MULTIPLE test."
+                                               Visibility="{Binding HasSubTests, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Border>
+
+                            <Button Grid.Row="4"
+                                    HorizontalAlignment="Right"
+                                    Padding="14,6"
+                                    Command="{Binding AddSubTestCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="PlusCircleOutline" />
+                                    <TextBlock Text="Add Sub-Test" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Border Grid.Column="2"
+                                Style="{StaticResource DialogSectionBorderStyle}">
+                            <Grid>
+                                <TextBlock Style="{StaticResource DialogHintTextStyle}"
+                                           Text="Select a sub-test to edit its fields."
+                                           Visibility="{Binding IsSubTestItemSelected, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                                <editors:SubTestFieldsEditor Visibility="{Binding IsSubTestItemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="6"
+                            Style="{StaticResource DialogSectionBorderStyle}"
+                            Visibility="{Binding ShowSubTestsSection, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                        <editors:SubTestFieldsEditor />
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </materialDesign:Card>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock VerticalAlignment="Center"
+                       Opacity="0.78"
+                       Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Margin="0,0,8,0"
+                        Padding="14,6"
+                        Command="{Binding CancelCommand}"
+                        Content="Cancel" />
+                <Button Padding="16,6"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding ConfirmCommand}"
+                        Content="Confirm" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

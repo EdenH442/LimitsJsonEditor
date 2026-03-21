@@ -22,8 +22,10 @@
                  Text="{Binding EditableStepName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Test Type" />
-        <TextBox Grid.Row="2"
-                 Grid.Column="2"
-                 Text="{Binding EditableStepType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+        <ComboBox Grid.Row="2"
+                  Grid.Column="2"
+                  IsEditable="True"
+                  ItemsSource="{Binding AvailableStepTypes}"
+                  Text="{Binding EditableStepType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
     </Grid>
 </UserControl>

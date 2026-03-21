@@ -11,6 +11,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     private readonly SharedFileContext _sharedFileContext;
     private readonly EditorFilteringSelectionService _filteringSelectionService;
     private readonly IAddTestDialogService _addTestDialogService;
+    private readonly IConfirmationDialogService _confirmationDialogService;
     private Step? _targetTest;
     private Limit? _targetLimit;
 
@@ -26,6 +27,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanDeleteSequence))]
     [NotifyCanExecuteChangedFor(nameof(AddTestCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteSequenceCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     private SequenceItemViewModel? selectedSequence;
 
     [ObservableProperty]
@@ -71,11 +73,13 @@ public sealed partial class MainEditorViewModel : ObservableObject
     public MainEditorViewModel(
         SharedFileContext sharedFileContext,
         EditorFilteringSelectionService filteringSelectionService,
-        IAddTestDialogService addTestDialogService)
+        IAddTestDialogService addTestDialogService,
+        IConfirmationDialogService confirmationDialogService)
     {
         _sharedFileContext = sharedFileContext;
         _filteringSelectionService = filteringSelectionService;
         _addTestDialogService = addTestDialogService;
+        _confirmationDialogService = confirmationDialogService;
 
         FilteredSequences = new ObservableCollection<SequenceItemViewModel>();
         TestNavigationItems = new ObservableCollection<TestNavigationItemViewModel>();
@@ -115,6 +119,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { "SINGLE", "MULTIPLE" };
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     private TestNavigationItemViewModel? selectedRootTestItem;
 
     public bool HasSelectedSequence => SelectedSequence is not null;
@@ -136,7 +142,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public bool CanDeleteSequence => HasSelectedSequence;
 
-    public bool CanDeleteTest => HasSelectedTest;
+    public bool CanDeleteTest => CanDeleteSelectedRootTest();
 
     public Action? DocumentEdited { get; set; }
 
@@ -288,7 +294,59 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanDeleteTest))]
     private void DeleteTest()
     {
-        StatusMessage = "Delete Test placeholder (not implemented yet).";
+        if (SelectedSequence is null || SelectedRootTestItem is null)
+        {
+            StatusMessage = "Select a root test before deleting.";
+            return;
+        }
+
+        var selectedSequence = SelectedSequence;
+        var rootTestToDelete = SelectedRootTestItem.RootTest.Model;
+
+        if (!selectedSequence.Model.StepList.Contains(rootTestToDelete))
+        {
+            StatusMessage = "The selected root test no longer belongs to the selected sequence.";
+            return;
+        }
+
+        if (selectedSequence.Model.StepList.Count == 1)
+        {
+            var confirmationMessage =
+                $"Delete '{rootTestToDelete.StepName}'?{Environment.NewLine}{Environment.NewLine}" +
+                $"This is the last test in '{selectedSequence.Name}', so the sequence will also be deleted." +
+                (IsMultipleRootTest(rootTestToDelete)
+                    ? $"{Environment.NewLine}{Environment.NewLine}All sub-tests in this MULTIPLE test will be removed too."
+                    : string.Empty);
+
+            var isConfirmed = _confirmationDialogService.ShowConfirmation(
+                confirmationMessage,
+                "Delete Test");
+
+            if (!isConfirmed)
+            {
+                StatusMessage = "Delete test canceled.";
+                return;
+            }
+
+            ResetTestAndLimitSelection();
+            SelectedSequence = null;
+            LoadedDocument.Sequences.Remove(selectedSequence.Model);
+            ApplySequenceFilter();
+
+            IsDocumentDirty = true;
+            DocumentEdited?.Invoke();
+            StatusMessage = $"Deleted last test '{rootTestToDelete.StepName}' and removed sequence '{selectedSequence.Name}'.";
+            return;
+        }
+
+        ResetTestAndLimitSelection();
+        selectedSequence.Model.StepList.Remove(rootTestToDelete);
+        var tests = _filteringSelectionService.BuildTestsForSequence(selectedSequence);
+        RebuildTestNavigation(tests, null);
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Deleted root test '{rootTestToDelete.StepName}' from sequence '{selectedSequence.Name}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -325,6 +383,13 @@ public sealed partial class MainEditorViewModel : ObservableObject
     }
 
     private bool CanAddTest() => SelectedSequence is not null;
+
+    private bool CanDeleteSelectedRootTest()
+    {
+        return SelectedSequence is not null
+            && SelectedRootTestItem is not null
+            && SelectedSequence.Model.StepList.Contains(SelectedRootTestItem.RootTest.Model);
+    }
 
     private bool CanSaveChanges() => SelectedTestItem is not null && HasPendingChanges;
 
@@ -414,16 +479,24 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void ResetTestAndLimitSelection()
     {
-        TestNavigationItems.Clear();
+        SelectedRootTestItem = null;
         SelectedTestItem = null;
         SelectedLimit = null;
+        TestNavigationItems.Clear();
     }
 
     private void ResetAllSelection()
     {
+        if (SelectedSequence is not null)
+        {
+            SelectedSequence = null;
+        }
+        else
+        {
+            ResetTestAndLimitSelection();
+        }
+
         FilteredSequences.Clear();
-        SelectedSequence = null;
-        ResetTestAndLimitSelection();
     }
 
 
@@ -570,5 +643,10 @@ public sealed partial class MainEditorViewModel : ObservableObject
         destination.Low = source.Low;
         destination.High = source.High;
         destination.Unit = source.Unit;
+    }
+
+    private static bool IsMultipleRootTest(Step step)
+    {
+        return string.Equals(step.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
     }
 }

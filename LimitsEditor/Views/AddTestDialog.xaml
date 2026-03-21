@@ -11,8 +11,13 @@
         MinWidth="860"
         MaxHeight="760"
         ResizeMode="CanMinimize"
-        WindowStartupLocation="CenterOwner">
-    <Grid Margin="20">
+        WindowStartupLocation="CenterOwner"
+        TextElement.FontSize="14"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}">
+    <Grid Margin="20"
+          Background="{DynamicResource MaterialDesignPaper}">
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="12" />

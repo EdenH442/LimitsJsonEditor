@@ -3,8 +3,9 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LimitsEditor.Models;
 using LimitsEditor.Validation;
+using AddTestDialogSubmission = LimitsEditor.Services.AddTestDialogSubmission;
+using AddTestLimitSubmission = LimitsEditor.Services.AddTestLimitSubmission;
 
 namespace LimitsEditor.ViewModels;
 
@@ -227,16 +228,28 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
         CloseRequested?.Invoke(this, false);
     }
 
-    public Step BuildStep()
+    public AddTestDialogSubmission BuildSubmission()
     {
-        return new Step
-        {
-            StepName = EditableStepName.Trim(),
-            StepType = IsMultipleTest ? "MULTIPLE" : "SINGLE",
-            LimitList = IsMultipleTest
-                ? SubTests.Select(item => item.EditableLimit.ToModel()).ToList()
-                : new List<Limit> { _singleTestLimit.ToModel() }
-        };
+        return new AddTestDialogSubmission(
+            EditableStepName.Trim(),
+            IsMultipleTest ? "MULTIPLE" : "SINGLE",
+            IsMultipleTest
+                ? SubTests.Select(item => ToSubmission(item.EditableLimit)).ToList()
+                : new List<AddTestLimitSubmission> { ToSubmission(_singleTestLimit) });
+    }
+
+
+    private static AddTestLimitSubmission ToSubmission(EditableLimitViewModel source)
+    {
+        return new AddTestLimitSubmission(
+            source.MultipleStepNameCheck,
+            source.LimitType,
+            source.ComparisonType,
+            source.ThresholdType,
+            source.ExpectedRes,
+            source.Low,
+            source.High,
+            source.Unit);
     }
 
     private void OnSubTestsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

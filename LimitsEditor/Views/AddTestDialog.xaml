@@ -9,7 +9,7 @@
         Title="Add Test"
         SizeToContent="WidthAndHeight"
         MinWidth="860"
-        MaxHeight="760"
+        MaxHeight="860"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterOwner"
         TextElement.FontSize="14"

@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:LimitsEditor.Views"
         mc:Ignorable="d"
         Title="Limits JSON Editor"
-        Height="860"
+        Height="960"
         Width="1360"
         MinHeight="700"
         MinWidth="1080"

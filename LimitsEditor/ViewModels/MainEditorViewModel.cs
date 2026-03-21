@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
 using LimitsEditor.Services;
-using System.Windows;
 
 namespace LimitsEditor.ViewModels;
 
@@ -263,23 +262,23 @@ public sealed partial class MainEditorViewModel : ObservableObject
     {
         if (SelectedSequence is null)
         {
-            MessageBox.Show("Select a sequence before adding a test.", "Add Test", MessageBoxButton.OK, MessageBoxImage.Information);
             StatusMessage = "Select a sequence before adding a test.";
             return;
         }
 
-        var createdStep = _addTestDialogService.ShowDialog(SelectedSequence.Name);
-        if (createdStep is null)
+        var dialogResult = _addTestDialogService.ShowDialog(SelectedSequence.Name);
+        if (!dialogResult.IsConfirmed || dialogResult.Submission is null)
         {
             StatusMessage = "Add test canceled.";
             return;
         }
 
+        var createdStep = CreateStep(dialogResult.Submission);
         SelectedSequence.Model.StepList.Add(createdStep);
 
         var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
         RebuildTestNavigation(tests, null);
-        SelectedTestItem = TestNavigationItems.FirstOrDefault(item => ReferenceEquals(item.RootTest.Model, createdStep));
+        SelectRootTest(createdStep);
 
         IsDocumentDirty = true;
         DocumentEdited?.Invoke();
@@ -361,6 +360,37 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
 
         return null;
+    }
+
+
+    private void SelectRootTest(Step step)
+    {
+        SelectedTestItem = TestNavigationItems.FirstOrDefault(item => item.IsRoot && ReferenceEquals(item.RootTest.Model, step));
+    }
+
+    private static Step CreateStep(AddTestDialogSubmission submission)
+    {
+        return new Step
+        {
+            StepName = submission.StepName,
+            StepType = submission.StepType,
+            LimitList = submission.Limits.Select(CreateLimit).ToList()
+        };
+    }
+
+    private static Limit CreateLimit(AddTestLimitSubmission submission)
+    {
+        return new Limit
+        {
+            MultipleStepNameCheck = submission.Name,
+            LimitType = submission.LimitType,
+            ComparisonType = submission.ComparisonType,
+            ThresholdType = submission.ThresholdType,
+            ExpectedRes = submission.ExpectedRes,
+            Low = submission.Low,
+            High = submission.High,
+            Unit = submission.Unit
+        };
     }
 
     private void ReloadFromSharedDocument()

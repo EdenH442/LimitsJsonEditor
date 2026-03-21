@@ -1,5 +1,4 @@
 using System.Windows;
-using LimitsEditor.Models;
 using LimitsEditor.Validation;
 using LimitsEditor.ViewModels;
 using LimitsEditor.Views;
@@ -15,7 +14,7 @@ public sealed class AddTestDialogService : IAddTestDialogService
         _addTestCreationValidator = addTestCreationValidator;
     }
 
-    public Step? ShowDialog(string sequenceName)
+    public AddTestDialogResult ShowDialog(string sequenceName)
     {
         var viewModel = new AddTestDialogViewModel(sequenceName, _addTestCreationValidator);
         var dialog = new AddTestDialog
@@ -34,7 +33,9 @@ public sealed class AddTestDialogService : IAddTestDialogService
         try
         {
             var result = dialog.ShowDialog();
-            return result == true ? viewModel.BuildStep() : null;
+            return result == true
+                ? AddTestDialogResult.Confirmed(viewModel.BuildSubmission())
+                : AddTestDialogResult.Canceled();
         }
         finally
         {

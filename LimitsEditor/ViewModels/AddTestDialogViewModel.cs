@@ -44,8 +44,10 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasValidationSummary))]
-    [NotifyCanExecuteChangedFor(nameof(ConfirmCommand))]
     private string validationSummary = string.Empty;
+
+    [ObservableProperty]
+    private bool hasAttemptedConfirm;
 
     [ObservableProperty]
     private string stepNameError = string.Empty;
@@ -203,20 +205,19 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     private bool CanDeleteSubTest(AddTestSubTestItemViewModel? subTest) => subTest is not null;
 
-    [RelayCommand(CanExecute = nameof(CanConfirm))]
+    [RelayCommand]
     private void Confirm()
     {
+        HasAttemptedConfirm = true;
         Revalidate();
         if (!IsCreationValid)
         {
-            StatusMessage = ValidationSummary;
+            StatusMessage = "Fix the validation errors before confirming.";
             return;
         }
 
         CloseRequested?.Invoke(this, true);
     }
-
-    private bool CanConfirm() => IsCreationValid;
 
     [RelayCommand]
     private void Cancel()
@@ -335,7 +336,6 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         _currentValidation = _addTestCreationValidator.Validate(BuildValidationRequest());
         ApplyValidationState(_currentValidation);
-        ConfirmCommand.NotifyCanExecuteChanged();
     }
 
     private AddTestCreationRequest BuildValidationRequest()
@@ -364,14 +364,28 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     private void ApplyValidationState(ValidationResult validation)
     {
-        StepNameError = GetIssueMessage(AddTestValidationTargets.StepName);
-        StepTypeError = GetIssueMessage(AddTestValidationTargets.StepType);
-        SubTestsError = GetIssueMessage(AddTestValidationTargets.SubTests);
-
         foreach (var subTest in SubTests)
         {
             subTest.ValidationMessage = string.Empty;
         }
+
+        if (!HasAttemptedConfirm)
+        {
+            StepNameError = string.Empty;
+            StepTypeError = string.Empty;
+            SubTestsError = string.Empty;
+            CurrentSubTestNameError = string.Empty;
+            CurrentLimitTypeError = string.Empty;
+            CurrentComparisonTypeError = string.Empty;
+            CurrentResultError = string.Empty;
+            CurrentRangeError = string.Empty;
+            ValidationSummary = string.Empty;
+            return;
+        }
+
+        StepNameError = GetIssueMessage(AddTestValidationTargets.StepName);
+        StepTypeError = GetIssueMessage(AddTestValidationTargets.StepType);
+        SubTestsError = GetIssueMessage(AddTestValidationTargets.SubTests);
 
         for (var index = 0; index < SubTests.Count; index++)
         {

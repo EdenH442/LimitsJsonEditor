@@ -312,15 +312,15 @@ public sealed partial class MainEditorViewModel : ObservableObject
         if (selectedSequence.Model.StepList.Count == 1)
         {
             var confirmationMessage =
-                $"Delete the last test '{rootTestToDelete.StepName}' from sequence '{selectedSequence.Name}'?{Environment.NewLine}{Environment.NewLine}" +
-                "Deleting this last root test will also delete the entire sequence because it would otherwise become empty." +
+                $"Delete '{rootTestToDelete.StepName}'?{Environment.NewLine}{Environment.NewLine}" +
+                $"This is the last test in '{selectedSequence.Name}', so the sequence will also be deleted." +
                 (IsMultipleRootTest(rootTestToDelete)
-                    ? $"{Environment.NewLine}{Environment.NewLine}This MULTIPLE root test will be removed together with all of its sub-tests."
+                    ? $"{Environment.NewLine}{Environment.NewLine}All sub-tests in this MULTIPLE test will be removed too."
                     : string.Empty);
 
             var isConfirmed = _confirmationDialogService.ShowConfirmation(
                 confirmationMessage,
-                "Delete Last Test");
+                "Delete Test");
 
             if (!isConfirmed)
             {

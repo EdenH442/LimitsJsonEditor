@@ -11,18 +11,21 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class AddTestDialogViewModel : ObservableObject
 {
-    private readonly EditableLimitViewModel _singleTestLimit = new();
+    private const string SingleStepType = "SINGLE";
+    private const string MultipleStepType = "MULTIPLE";
+
+    private readonly EditableLimitViewModel _rootLimitDraft = new();
     private readonly IAddTestCreationValidator _addTestCreationValidator;
-    private AddTestSubTestItemViewModel? _lastSelectedMultipleSubTest;
+    private AddTestSubTestItemViewModel? _lastSelectedSubTestDraft;
     private ValidationResult _currentValidation = new();
 
     public AddTestDialogViewModel(string sequenceName, IAddTestCreationValidator addTestCreationValidator)
     {
         _addTestCreationValidator = addTestCreationValidator;
         SequenceName = sequenceName;
-        availableStepTypes = new[] { "SINGLE", "MULTIPLE" };
-        EditableLimit = _singleTestLimit;
-        _singleTestLimit.PropertyChanged += OnRootLimitPropertyChanged;
+        availableStepTypes = new[] { SingleStepType, MultipleStepType };
+        EditableLimit = _rootLimitDraft;
+        _rootLimitDraft.PropertyChanged += OnRootLimitPropertyChanged;
         SubTests.CollectionChanged += OnSubTestsCollectionChanged;
         Revalidate();
     }
@@ -38,7 +41,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
     [NotifyPropertyChangedFor(nameof(HasSubTests))]
-    private string editableStepType = "SINGLE";
+    private string editableStepType = SingleStepType;
 
     [ObservableProperty]
     private string statusMessage = "Create a test and confirm to append it to the selected sequence.";
@@ -89,7 +92,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     public ObservableCollection<AddTestSubTestItemViewModel> SubTests { get; } = new();
 
-    public bool IsMultipleTest => string.Equals(EditableStepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleTest => string.Equals(EditableStepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
 
     public bool ShowSubTestsSection => IsMultipleTest;
 
@@ -114,25 +117,16 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         HasAttemptedConfirm = false;
 
-        if (string.Equals(value, "MULTIPLE", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(value, MultipleStepType, StringComparison.OrdinalIgnoreCase))
         {
             RestoreMultipleSelection();
-            StatusMessage = HasSubTests
-                ? "Select a sub-test to edit, or add another sub-test."
-                : "Add a sub-test to begin building this MULTIPLE test.";
         }
         else
         {
-            if (SelectedSubTest is not null)
-            {
-                _lastSelectedMultipleSubTest = SelectedSubTest;
-            }
-
-            SelectedSubTest = null;
-            EditableLimit = _singleTestLimit;
-            StatusMessage = "Editing root fields for a SINGLE test.";
+            SwitchToSingleTestEditor();
         }
 
+        UpdateStatusMessageForCurrentSelection();
         Revalidate();
     }
 
@@ -140,26 +134,20 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         if (newValue is not null)
         {
-            _lastSelectedMultipleSubTest = newValue;
+            _lastSelectedSubTestDraft = newValue;
         }
 
-        if (IsMultipleTest)
-        {
-            EditableLimit = newValue?.EditableLimit;
-            StatusMessage = newValue is null
-                ? "Select a sub-test to edit, or add a new one."
-                : $"Editing sub-test '{newValue.DisplayName}'.";
-        }
-
+        SyncEditableLimit();
+        UpdateStatusMessageForCurrentSelection();
         Revalidate();
     }
 
     [RelayCommand]
     private void AddSubTest()
     {
-        var subTest = new AddTestSubTestItemViewModel(new EditableLimitViewModel());
-        SubTests.Add(subTest);
-        SelectSubTest(subTest);
+        var subTestDraft = CreateSubTestDraft();
+        SubTests.Add(subTestDraft);
+        SelectSubTest(subTestDraft);
         StatusMessage = $"Added sub-test ({SubTests.Count} total).";
         Revalidate();
     }
@@ -172,27 +160,27 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
             return;
         }
 
-        var index = SubTests.IndexOf(subTest);
-        if (index < 0)
+        var deletedIndex = SubTests.IndexOf(subTest);
+        if (deletedIndex < 0)
         {
             return;
         }
 
         var wasSelected = ReferenceEquals(SelectedSubTest, subTest);
-        var nextSelection = wasSelected
-            ? GetAdjacentSubTest(index)
+        var replacementSelection = wasSelected
+            ? GetAdjacentSubTest(deletedIndex)
             : SelectedSubTest;
 
-        if (ReferenceEquals(_lastSelectedMultipleSubTest, subTest))
+        if (ReferenceEquals(_lastSelectedSubTestDraft, subTest))
         {
-            _lastSelectedMultipleSubTest = nextSelection;
+            _lastSelectedSubTestDraft = replacementSelection;
         }
 
-        SubTests.RemoveAt(index);
+        SubTests.RemoveAt(deletedIndex);
 
         if (wasSelected)
         {
-            SelectSubTest(nextSelection);
+            SelectSubTest(replacementSelection);
         }
         else
         {
@@ -232,12 +220,16 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         return new AddTestDialogSubmission(
             EditableStepName.Trim(),
-            IsMultipleTest ? "MULTIPLE" : "SINGLE",
+            IsMultipleTest ? MultipleStepType : SingleStepType,
             IsMultipleTest
                 ? SubTests.Select(item => ToSubmission(item.EditableLimit)).ToList()
-                : new List<AddTestLimitSubmission> { ToSubmission(_singleTestLimit) });
+                : new List<AddTestLimitSubmission> { ToSubmission(_rootLimitDraft) });
     }
 
+    private AddTestSubTestItemViewModel CreateSubTestDraft()
+    {
+        return new AddTestSubTestItemViewModel(new EditableLimitViewModel());
+    }
 
     private static AddTestLimitSubmission ToSubmission(EditableLimitViewModel source)
     {
@@ -277,9 +269,9 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
             SelectedSubTest = null;
         }
 
-        if (_lastSelectedMultipleSubTest is not null && !SubTests.Contains(_lastSelectedMultipleSubTest))
+        if (_lastSelectedSubTestDraft is not null && !SubTests.Contains(_lastSelectedSubTestDraft))
         {
-            _lastSelectedMultipleSubTest = null;
+            _lastSelectedSubTestDraft = null;
         }
 
         if (IsMultipleTest)
@@ -302,11 +294,11 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     private void RestoreMultipleSelection()
     {
-        var targetSelection = _lastSelectedMultipleSubTest is not null && SubTests.Contains(_lastSelectedMultipleSubTest)
-            ? _lastSelectedMultipleSubTest
+        var preferredSelection = _lastSelectedSubTestDraft is not null && SubTests.Contains(_lastSelectedSubTestDraft)
+            ? _lastSelectedSubTestDraft
             : SubTests.FirstOrDefault();
 
-        SelectSubTest(targetSelection);
+        SelectSubTest(preferredSelection);
     }
 
     private void SelectSubTest(AddTestSubTestItemViewModel? subTest)
@@ -336,15 +328,41 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
             : null;
     }
 
+    private void SwitchToSingleTestEditor()
+    {
+        if (SelectedSubTest is not null)
+        {
+            _lastSelectedSubTestDraft = SelectedSubTest;
+        }
+
+        SelectedSubTest = null;
+        EditableLimit = _rootLimitDraft;
+    }
+
     private void SyncEditableLimit()
+    {
+        EditableLimit = IsMultipleTest
+            ? SelectedSubTest?.EditableLimit
+            : _rootLimitDraft;
+    }
+
+    private void UpdateStatusMessageForCurrentSelection()
     {
         if (!IsMultipleTest)
         {
-            EditableLimit = _singleTestLimit;
+            StatusMessage = "Editing root fields for a SINGLE test.";
             return;
         }
 
-        EditableLimit = SelectedSubTest?.EditableLimit;
+        if (!HasSubTests)
+        {
+            StatusMessage = "Add a sub-test to begin building this MULTIPLE test.";
+            return;
+        }
+
+        StatusMessage = SelectedSubTest is null
+            ? "Select a sub-test to edit, or add another sub-test."
+            : $"Editing sub-test '{SelectedSubTest.DisplayName}'.";
     }
 
     private void Revalidate()
@@ -359,7 +377,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
         {
             StepName = EditableStepName,
             StepType = EditableStepType,
-            RootLimit = ToDraft(_singleTestLimit),
+            RootLimit = ToDraft(_rootLimitDraft),
             SubTests = SubTests.Select(item => ToDraft(item.EditableLimit)).ToList()
         };
     }
@@ -386,15 +404,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
         if (!HasAttemptedConfirm)
         {
-            StepNameError = string.Empty;
-            StepTypeError = string.Empty;
-            SubTestsError = string.Empty;
-            CurrentSubTestNameError = string.Empty;
-            CurrentLimitTypeError = string.Empty;
-            CurrentComparisonTypeError = string.Empty;
-            CurrentResultError = string.Empty;
-            CurrentRangeError = string.Empty;
-            ValidationSummary = string.Empty;
+            ClearValidationMessages();
             return;
         }
 
@@ -417,21 +427,44 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
             }
         }
 
-        var currentTargetPrefix = IsMultipleTest && SelectedSubTest is not null
-            ? AddTestValidationTargets.SubTestPrefix(SubTests.IndexOf(SelectedSubTest))
-            : AddTestValidationTargets.RootLimitPrefix;
-
-        CurrentSubTestNameError = IsMultipleTest && SelectedSubTest is not null
-            ? GetIssueMessage(currentTargetPrefix + AddTestValidationTargets.NameSuffix)
+        var activeLimitValidationTarget = GetActiveLimitValidationTarget();
+        CurrentSubTestNameError = IsSubTestItemSelected
+            ? GetIssueMessage(activeLimitValidationTarget + AddTestValidationTargets.NameSuffix)
             : string.Empty;
-        CurrentLimitTypeError = GetIssueMessage(currentTargetPrefix + AddTestValidationTargets.LimitTypeSuffix);
-        CurrentComparisonTypeError = GetIssueMessage(currentTargetPrefix + AddTestValidationTargets.ComparisonTypeSuffix);
-        CurrentResultError = GetIssueMessage(currentTargetPrefix + AddTestValidationTargets.ResultSuffix);
-        CurrentRangeError = GetIssueMessage(currentTargetPrefix + AddTestValidationTargets.RangeSuffix);
+        CurrentLimitTypeError = GetIssueMessage(activeLimitValidationTarget + AddTestValidationTargets.LimitTypeSuffix);
+        CurrentComparisonTypeError = GetIssueMessage(activeLimitValidationTarget + AddTestValidationTargets.ComparisonTypeSuffix);
+        CurrentResultError = GetIssueMessage(activeLimitValidationTarget + AddTestValidationTargets.ResultSuffix);
+        CurrentRangeError = GetIssueMessage(activeLimitValidationTarget + AddTestValidationTargets.RangeSuffix);
 
         ValidationSummary = validation.IsValid
             ? string.Empty
             : string.Join(Environment.NewLine, validation.Issues.Select(issue => $"• {issue.Message}").Distinct());
+    }
+
+    private void ClearValidationMessages()
+    {
+        StepNameError = string.Empty;
+        StepTypeError = string.Empty;
+        SubTestsError = string.Empty;
+        CurrentSubTestNameError = string.Empty;
+        CurrentLimitTypeError = string.Empty;
+        CurrentComparisonTypeError = string.Empty;
+        CurrentResultError = string.Empty;
+        CurrentRangeError = string.Empty;
+        ValidationSummary = string.Empty;
+    }
+
+    private string GetActiveLimitValidationTarget()
+    {
+        if (!IsMultipleTest || SelectedSubTest is null)
+        {
+            return AddTestValidationTargets.RootLimitPrefix;
+        }
+
+        var selectedSubTestIndex = SubTests.IndexOf(SelectedSubTest);
+        return selectedSubTestIndex >= 0
+            ? AddTestValidationTargets.SubTestPrefix(selectedSubTestIndex)
+            : AddTestValidationTargets.RootLimitPrefix;
     }
 
     private string GetIssueMessage(string target)

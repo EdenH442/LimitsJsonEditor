@@ -195,15 +195,10 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Foreground="IndianRed"
-                           Style="{StaticResource SubtleTextStyle}"
-                           Text="{Binding ValidationSummary}"
-                           TextWrapping="Wrap" />
-                <TextBlock Opacity="0.78"
-                           Text="{Binding StatusMessage}"
-                           TextWrapping="Wrap" />
-            </StackPanel>
+            <TextBlock VerticalAlignment="Center"
+                       Opacity="0.78"
+                       Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap" />
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button Margin="0,0,8,0"

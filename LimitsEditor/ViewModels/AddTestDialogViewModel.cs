@@ -92,6 +92,8 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
 
     public ObservableCollection<AddTestSubTestItemViewModel> SubTests { get; } = new();
 
+    public bool IsStepTypeEditable => true;
+
     public bool IsMultipleTest => string.Equals(EditableStepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
 
     public bool ShowSubTestsSection => IsMultipleTest;

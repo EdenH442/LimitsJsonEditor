@@ -33,7 +33,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <materialDesign:PackIcon Width="18"
                                              Height="18"
                                              Margin="0,0,8,0"
@@ -42,10 +42,11 @@
                     <TextBlock FontSize="20"
                                FontWeight="SemiBold"
                                Text="{Binding Title}" />
-                </DockPanel>
+                </StackPanel>
 
                 <TextBlock Grid.Row="2"
                            Opacity="0.84"
+                           TextAlignment="Center"
                            Text="{Binding Message}"
                            TextWrapping="Wrap" />
             </Grid>
@@ -53,6 +54,8 @@
 
         <TextBlock Grid.Row="2"
                    Style="{StaticResource SubtleTextStyle}"
+                   TextAlignment="Center"
+                   HorizontalAlignment="Center"
                    Text="This change updates the open document only until you save."
                    TextWrapping="Wrap" />
 

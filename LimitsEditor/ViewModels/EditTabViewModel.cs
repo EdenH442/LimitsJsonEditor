@@ -40,7 +40,7 @@ public sealed partial class EditTabViewModel : ObservableObject
             return;
         }
 
-        CopyLimitValues(EditableLimit, _targetLimit);
+        EditableLimit.ApplyTo(_targetLimit);
         SaveRequested?.Invoke();
     }
 
@@ -53,17 +53,5 @@ public sealed partial class EditTabViewModel : ObservableObject
     private bool CanSaveChanges()
     {
         return _targetLimit is not null && EditableLimit is not null;
-    }
-
-    private static void CopyLimitValues(EditableLimitViewModel source, Limit destination)
-    {
-        destination.MultipleStepNameCheck = source.MultipleStepNameCheck;
-        destination.LimitType = source.LimitType;
-        destination.ComparisonType = source.ComparisonType;
-        destination.ThresholdType = source.ThresholdType;
-        destination.ExpectedRes = source.ExpectedRes;
-        destination.Low = source.Low;
-        destination.High = source.High;
-        destination.Unit = source.Unit;
     }
 }

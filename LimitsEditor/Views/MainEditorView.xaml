@@ -247,6 +247,7 @@
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="6" />
                                                             <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
                                                         <materialDesign:PackIcon Grid.Column="0"
                                                                                  Width="12"
@@ -260,6 +261,15 @@
                                                                    Opacity="0.92"
                                                                    Text="{Binding DisplayName}"
                                                                    TextTrimming="CharacterEllipsis" />
+                                                        <Button Grid.Column="3"
+                                                                Padding="4"
+                                                                Margin="8,0,0,0"
+                                                                Command="{Binding DataContext.DeleteSubTestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}">
+                                                            <materialDesign:PackIcon Width="14"
+                                                                                     Height="14"
+                                                                                     Kind="CloseCircleOutline" />
+                                                        </Button>
                                                     </Grid>
                                                 </Border>
                                             </DataTemplate>
@@ -276,6 +286,14 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="PlusCircleOutline" />
                             <TextBlock Text="Add Test" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SectionActionButtonStyle}"
+                            Command="{Binding AddSubTestCommand}"
+                            Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="PlusCircleOutline" />
+                            <TextBlock Text="Add Sub-Test" />
                         </StackPanel>
                     </Button>
                     <Button Padding="12,7" MinWidth="118" Command="{Binding DeleteTestCommand}">

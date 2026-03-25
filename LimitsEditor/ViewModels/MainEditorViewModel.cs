@@ -43,6 +43,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(SelectedRootTestItem))]
     [NotifyPropertyChangedFor(nameof(IsStepTypeEditable))]
+    [NotifyCanExecuteChangedFor(nameof(AddSubTestCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
@@ -145,6 +146,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSubTestCommand))]
     private TestNavigationItemViewModel? selectedRootTestItem;
 
     public bool HasSelectedSequence => SelectedSequence is not null;
@@ -153,9 +155,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public bool NotHasSelectedTest => !HasSelectedTest;
 
-    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, MultipleStepType, StringComparison.OrdinalIgnoreCase);
 
-    public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, "SINGLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, SingleStepType, StringComparison.OrdinalIgnoreCase);
 
 
     public bool IsSubTestItemSelected => SelectedTestItem?.IsSubTest == true;
@@ -308,6 +310,30 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = $"Added test '{createdStep.StepName}' to sequence '{SelectedSequence.Name}'.";
     }
 
+    [RelayCommand(CanExecute = nameof(CanAddSubTest))]
+    private void AddSubTest()
+    {
+        if (SelectedTestItem is null)
+        {
+            return;
+        }
+
+        var rootTest = SelectedTestItem.RootTest.Model;
+        var newLimit = new Limit();
+        rootTest.LimitList.Add(newLimit);
+
+        if (SelectedSequence is not null)
+        {
+            var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+            RebuildTestNavigation(tests, null);
+        }
+
+        SelectSubTest(rootTest, newLimit);
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Added sub-test to '{rootTest.StepName}'.";
+    }
+
     [RelayCommand(CanExecute = nameof(CanDeleteTest))]
     private void DeleteTest()
     {
@@ -403,6 +429,35 @@ public sealed partial class MainEditorViewModel : ObservableObject
         StatusMessage = "Applied in-memory edits to selected item.";
     }
 
+    [RelayCommand(CanExecute = nameof(CanDeleteSubTest))]
+    private void DeleteSubTest(TestNavigationItemViewModel? subTestItem)
+    {
+        if (subTestItem is null || !subTestItem.IsSubTest || SelectedSequence is null)
+        {
+            return;
+        }
+
+        var rootTest = subTestItem.RootTest.Model;
+        var subTestLimit = subTestItem.SubTestLimit;
+        if (subTestLimit is null)
+        {
+            return;
+        }
+
+        if (!rootTest.LimitList.Remove(subTestLimit))
+        {
+            return;
+        }
+
+        var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+        RebuildTestNavigation(tests, null);
+        SelectRootTest(rootTest);
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Deleted sub-test from '{rootTest.StepName}'.";
+    }
+
     [RelayCommand(CanExecute = nameof(CanCancelEdit))]
     private void CancelEdit()
     {
@@ -412,11 +467,18 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private bool CanAddTest() => SelectedSequence is not null;
 
+    private bool CanAddSubTest() => IsMultipleTestSelected && SelectedTestItem is not null;
+
     private bool CanDeleteSelectedRootTest()
     {
         return SelectedSequence is not null
             && SelectedRootTestItem is not null
             && SelectedSequence.Model.StepList.Contains(SelectedRootTestItem.RootTest.Model);
+    }
+
+    private bool CanDeleteSubTest(TestNavigationItemViewModel? subTestItem)
+    {
+        return SelectedSequence is not null && subTestItem?.IsSubTest == true;
     }
 
     private bool CanSaveChanges() => SelectedTestItem is not null && HasPendingChanges;
@@ -459,6 +521,23 @@ public sealed partial class MainEditorViewModel : ObservableObject
     private void SelectRootTest(Step step)
     {
         SelectedTestItem = TestNavigationItems.FirstOrDefault(item => item.IsRoot && ReferenceEquals(item.RootTest.Model, step));
+    }
+
+    private void SelectSubTest(Step rootTest, Limit subTest)
+    {
+        var selection = TestNavigationItems
+            .SelectMany(root => root.SubTests)
+            .FirstOrDefault(item =>
+                ReferenceEquals(item.RootTest.Model, rootTest) &&
+                ReferenceEquals(item.SubTestLimit, subTest));
+
+        if (selection is null)
+        {
+            return;
+        }
+
+        SelectedTestItem = selection;
+        UpdateNavigationSelectionState();
     }
 
     private static Step CreateStep(AddTestDialogSubmission submission)

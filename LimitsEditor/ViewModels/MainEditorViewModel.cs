@@ -22,6 +22,10 @@ public sealed partial class MainEditorViewModel : ObservableObject
     private string statusMessage = "Ready";
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddSequenceCommand))]
+    private bool isFileLoaded;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FindSequenceCommand))]
     private string searchText = string.Empty;
 
@@ -103,6 +107,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
             if (args.PropertyName == nameof(SharedFileContext.LoadedDocument))
             {
                 OnPropertyChanged(nameof(LoadedDocument));
+                IsFileLoaded = true;
                 IsDocumentDirty = false;
                 ReloadFromSharedDocument();
             }
@@ -277,11 +282,39 @@ public sealed partial class MainEditorViewModel : ObservableObject
         ApplySequenceFilter();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAddSequence))]
     private void AddSequence()
     {
-        StatusMessage = "Add Sequence workflow placeholder (not implemented yet).";
+        var baseName = "New Sequence";
+        var usedNames = LoadedDocument.Sequences
+            .Select(sequence => sequence.SeqName)
+            .ToList();
+
+        var newName = baseName;
+        var counter = 2;
+        while (usedNames.Any(name => string.Equals(name, newName, StringComparison.OrdinalIgnoreCase)))
+        {
+            newName = $"{baseName} {counter}";
+            counter++;
+        }
+
+        var newSequence = new Sequence
+        {
+            SeqName = newName,
+            StepList = new List<Step>()
+        };
+
+        LoadedDocument.Sequences.Add(newSequence);
+        ApplySequenceFilter(); //rebuilds the list of sequences
+
+        SelectedSequence = FilteredSequences.FirstOrDefault(item => ReferenceEquals(item.Model, newSequence));
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Added sequence '{newSequence.SeqName}'.";
     }
+
+    private bool CanAddSequence() => IsFileLoaded;
 
     [RelayCommand]
     private void BeginSequenceEdit(SequenceItemViewModel? sequence)

@@ -337,7 +337,41 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanDeleteSequence))]
     private void DeleteSequence()
     {
-        StatusMessage = "Delete Sequence placeholder (not implemented yet).";
+        if (SelectedSequence is null)
+        {
+            return;
+        }
+
+        var sequenceToDelete = SelectedSequence.Model;
+        var sequenceName = sequenceToDelete.SeqName;
+        var confirmationMessage =
+            $"{Environment.NewLine} Delete sequence '{sequenceName}'?{Environment.NewLine}" +
+            "All tests will also be removed.";
+
+        var isConfirmed = _confirmationDialogService.ShowConfirmation(
+            confirmationMessage,
+            "Delete Sequence");
+
+        if (!isConfirmed)
+        {
+            StatusMessage = "Delete sequence canceled.";
+            return;
+        }
+
+        var previousIndex = FilteredSequences.IndexOf(SelectedSequence) - 1;
+
+        LoadedDocument.Sequences.Remove(sequenceToDelete);
+        ApplySequenceFilter();
+
+        if (FilteredSequences.Count > 0)
+        {
+            var clampedIndex = Math.Max(0, Math.Min(previousIndex, FilteredSequences.Count - 1));
+            SelectedSequence = FilteredSequences[clampedIndex];
+        }
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Deleted sequence '{sequenceName}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanAddTest))]

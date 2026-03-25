@@ -420,6 +420,13 @@ public sealed partial class MainEditorViewModel : ObservableObject
         if (_targetLimit is not null && EditableLimit is not null)
         {
             EditableLimit.ApplyTo(_targetLimit);
+
+            if (SelectedSequence is not null && SelectedTestItem?.IsSubTest == true)
+            {
+                var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+                RebuildTestNavigation(tests, null);
+                SelectSubTest(_targetTest!, _targetLimit);
+            }
         }
 
         RefreshSelectedLimitView();

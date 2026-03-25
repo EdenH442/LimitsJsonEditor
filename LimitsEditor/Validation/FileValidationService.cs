@@ -69,6 +69,48 @@ public sealed class FileValidationService : IFileValidationService
                 Target = nameof(filePath),
                 Message = "Please provide a file path."
             });
+
+            return result;
+        }
+
+        if (!string.Equals(Path.GetExtension(filePath), ".json", StringComparison.OrdinalIgnoreCase))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = "Please save to a JSON file (.json)."
+            });
+
+            return result;
+        }
+
+        var directoryPath = Path.GetDirectoryName(filePath);
+        if (string.IsNullOrWhiteSpace(directoryPath) || !Directory.Exists(directoryPath))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = "The target directory does not exist."
+            });
+            return result;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            return result;
+        }
+
+        try
+        {
+            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Write, FileShare.None);
+        }
+        catch (Exception ex)
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(filePath),
+                Message = $"The file cannot be opened for writing: {ex.Message}"
+            });
         }
 
         return result;

@@ -33,6 +33,7 @@
         <TextBlock Grid.Row="4" Grid.Column="0" Text="Test Type" />
         <ComboBox Grid.Row="4"
                   Grid.Column="2"
+                  IsEnabled="{Binding IsStepTypeEditable}"
                   IsEditable="True"
                   ItemsSource="{Binding AvailableStepTypes}"
                   Text="{Binding EditableStepType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />

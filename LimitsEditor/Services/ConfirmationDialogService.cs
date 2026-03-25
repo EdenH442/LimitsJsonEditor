@@ -11,7 +11,7 @@ public sealed class ConfirmationDialogService : IConfirmationDialogService
         var viewModel = new ConfirmationDialogViewModel(title, message);
         var dialog = new ConfirmationDialog
         {
-            Owner = Application.Current.MainWindow,
+            Owner = Application.Current?.MainWindow,
             DataContext = viewModel
         };
 

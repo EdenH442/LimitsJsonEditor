@@ -40,6 +40,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(SelectedRootTestItem))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
     private TestNavigationItemViewModel? selectedTestItem;
 
     [ObservableProperty]
@@ -57,6 +59,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
     private Limit? selectedLimit;
 
     [ObservableProperty]
@@ -118,6 +122,22 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { "SINGLE", "MULTIPLE" };
 
+    public bool IsStepTypeEditable => false;
+
+    public string StepNameError => string.Empty;
+
+    public string StepTypeError => string.Empty;
+
+    public string CurrentSubTestNameError => string.Empty;
+
+    public string CurrentLimitTypeError => string.Empty;
+
+    public string CurrentComparisonTypeError => string.Empty;
+
+    public string CurrentResultError => string.Empty;
+
+    public string CurrentRangeError => string.Empty;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
@@ -169,7 +189,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     partial void OnSelectedRootTestItemChanged(TestNavigationItemViewModel? value)
     {
-        if (value is null || ReferenceEquals(value, SelectedTestItem) || SelectedTestItem?.IsSubTest == true && ReferenceEquals(value.RootTest.Model, SelectedTestItem.RootTest.Model))
+        if (value is null || ReferenceEquals(value, SelectedTestItem))
         {
             return;
         }
@@ -202,14 +222,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         SyncEditableFromSelection();
         UpdateNavigationSelectionState();
-        if (value.IsRoot)
-        {
-            SelectedRootTestItem = value;
-        }
-        else
-        {
-            SelectedRootTestItem = TestNavigationItems.FirstOrDefault(item => item.Matches(value.RootTest, null));
-        }
+        SelectedRootTestItem = value.IsRoot ? value : null;
 
         StatusMessage = $"Selected {(value.IsRoot ? "test" : "sub-test")} '{value.DisplayName}'.";
     }
@@ -365,7 +378,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         if (_targetLimit is not null && EditableLimit is not null)
         {
-            CopyLimitValues(EditableLimit, _targetLimit);
+            EditableLimit.ApplyTo(_targetLimit);
         }
 
         RefreshSelectedLimitView();
@@ -631,18 +644,6 @@ public sealed partial class MainEditorViewModel : ObservableObject
         {
             target.Add(item);
         }
-    }
-
-    private static void CopyLimitValues(EditableLimitViewModel source, Limit destination)
-    {
-        destination.MultipleStepNameCheck = source.MultipleStepNameCheck;
-        destination.LimitType = source.LimitType;
-        destination.ComparisonType = source.ComparisonType;
-        destination.ThresholdType = source.ThresholdType;
-        destination.ExpectedRes = source.ExpectedRes;
-        destination.Low = source.Low;
-        destination.High = source.High;
-        destination.Unit = source.Unit;
     }
 
     private static bool IsMultipleRootTest(Step step)

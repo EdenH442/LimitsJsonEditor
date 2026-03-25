@@ -264,6 +264,13 @@ public sealed partial class MainEditorViewModel : ObservableObject
         OnPropertyChanged(nameof(HasPendingChanges));
     }
 
+    private void MarkDocumentDirty()
+    {
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+    }
+
+
     [RelayCommand]
     private void FindSequence()
     {
@@ -274,6 +281,24 @@ public sealed partial class MainEditorViewModel : ObservableObject
     private void AddSequence()
     {
         StatusMessage = "Add Sequence workflow placeholder (not implemented yet).";
+    }
+
+    [RelayCommand]
+    private void BeginSequenceEdit(SequenceItemViewModel? sequence)
+    {
+        sequence?.BeginEdit();
+    }
+
+    [RelayCommand]
+    private void CommitSequenceEdit(SequenceItemViewModel? sequence)
+    {
+        sequence?.CommitEdit();
+    }
+
+    [RelayCommand]
+    private void CancelSequenceEdit(SequenceItemViewModel? sequence)
+    {
+        sequence?.CancelEdit();
     }
 
     [RelayCommand(CanExecute = nameof(CanDeleteSequence))]
@@ -583,7 +608,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void ApplySequenceFilter()
     {
-        var filteredSequences = _filteringSelectionService.BuildFilteredSequences(LoadedDocument, SearchText);
+        var filteredSequences = _filteringSelectionService.BuildFilteredSequences(LoadedDocument, SearchText, MarkDocumentDirty);
 
         ResetAllSelection();
         ReplaceWith(FilteredSequences, filteredSequences);

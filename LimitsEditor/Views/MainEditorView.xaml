@@ -149,8 +149,58 @@
                     <Border Grid.Row="2" Style="{StaticResource ListPanelBorderStyle}">
                         <ListBox ItemsSource="{Binding FilteredSequences}"
                                  BorderThickness="0"
-                                 DisplayMemberPath="Name"
-                                 SelectedItem="{Binding SelectedSequence}" />
+                                 SelectedItem="{Binding SelectedSequence}"
+                                 HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding MouseAction="LeftDoubleClick"
+                                                              Command="{Binding DataContext.BeginSequenceEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              CommandParameter="{Binding}" />
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
+                                        <TextBox Text="{Binding EditableName, UpdateSourceTrigger=PropertyChanged}"
+                                                 MinWidth="80"
+                                                 HorizontalAlignment="Stretch"
+                                                 Loaded="SequenceNameTextBox_OnLoaded"
+                                                 LostFocus="SequenceNameTextBox_OnLostFocus">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Enter"
+                                                            Command="{Binding DataContext.CommitSequenceEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" />
+                                                <KeyBinding Key="Escape"
+                                                            Command="{Binding DataContext.CancelSequenceEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" />
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Border>
                 </Grid>
 

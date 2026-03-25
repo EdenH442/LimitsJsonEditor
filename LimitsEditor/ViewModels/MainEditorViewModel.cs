@@ -8,6 +8,9 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class MainEditorViewModel : ObservableObject
 {
+    private const string SingleStepType = "SINGLE";
+    private const string MultipleStepType = "MULTIPLE";
+
     private readonly SharedFileContext _sharedFileContext;
     private readonly EditorFilteringSelectionService _filteringSelectionService;
     private readonly IAddTestDialogService _addTestDialogService;
@@ -39,6 +42,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(SelectedRootTestItem))]
+    [NotifyPropertyChangedFor(nameof(IsStepTypeEditable))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
     [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
@@ -120,9 +124,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public TestItemViewModel? SelectedTest => SelectedTestItem?.RootTest;
 
-    public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { "SINGLE", "MULTIPLE" };
+    public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { SingleStepType, MultipleStepType };
 
-    public bool IsStepTypeEditable => false;
+    public bool IsStepTypeEditable => HasSelectedTest;
 
     public string StepNameError => string.Empty;
 
@@ -373,7 +377,18 @@ public sealed partial class MainEditorViewModel : ObservableObject
         if (_targetTest is not null)
         {
             _targetTest.StepName = EditableStepName;
-            _targetTest.StepType = EditableStepType;
+            var stepTypeChanged = ApplyStepTypeChangeIfNeeded();
+            if (!stepTypeChanged)
+            {
+                _targetTest.StepType = EditableStepType;
+            }
+
+            if (stepTypeChanged && SelectedSequence is not null)
+            {
+                var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+                RebuildTestNavigation(tests, SelectedTestItem);
+                SelectRootTest(_targetTest);
+            }
         }
 
         if (_targetLimit is not null && EditableLimit is not null)
@@ -648,6 +663,64 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private static bool IsMultipleRootTest(Step step)
     {
-        return string.Equals(step.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(step.StepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsMultipleStepType(string stepType)
+    {
+        return string.Equals(stepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSingleStepType(string stepType)
+    {
+        return string.Equals(stepType, SingleStepType, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool ApplyStepTypeChangeIfNeeded()
+    {
+        if (_targetTest is null || string.IsNullOrWhiteSpace(EditableStepType))
+        {
+            return false;
+        }
+
+        if (string.Equals(_targetTest.StepType, EditableStepType, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var wasMultiple = IsMultipleStepType(_targetTest.StepType);
+        var willBeMultiple = IsMultipleStepType(EditableStepType);
+
+        if (!wasMultiple && willBeMultiple)
+        {
+            ConvertSingleToMultiple(_targetTest);
+        }
+        else if (wasMultiple && !willBeMultiple)
+        {
+            ConvertMultipleToSingle(_targetTest);
+        }
+
+        _targetTest.StepType = EditableStepType;
+        return true;
+    }
+
+    private static void ConvertSingleToMultiple(Step step)
+    {
+        foreach (var limit in step.LimitList)
+        {
+            limit.MultipleStepNameCheck = string.Empty;
+        }
+    }
+
+    private static void ConvertMultipleToSingle(Step step)
+    {
+        if (step.LimitList.Count == 0)
+        {
+            return;
+        }
+
+        var firstLimit = step.LimitList[0];
+        firstLimit.MultipleStepNameCheck = string.Empty;
+        step.LimitList = new List<Limit> { firstLimit };
     }
 }

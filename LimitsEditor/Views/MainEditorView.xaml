@@ -149,8 +149,58 @@
                     <Border Grid.Row="2" Style="{StaticResource ListPanelBorderStyle}">
                         <ListBox ItemsSource="{Binding FilteredSequences}"
                                  BorderThickness="0"
-                                 DisplayMemberPath="Name"
-                                 SelectedItem="{Binding SelectedSequence}" />
+                                 SelectedItem="{Binding SelectedSequence}"
+                                 HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding MouseAction="LeftDoubleClick"
+                                                              Command="{Binding DataContext.BeginSequenceEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              CommandParameter="{Binding}" />
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
+                                        <TextBox Text="{Binding EditableName, UpdateSourceTrigger=PropertyChanged}"
+                                                 MinWidth="80"
+                                                 HorizontalAlignment="Stretch"
+                                                 Loaded="SequenceNameTextBox_OnLoaded"
+                                                 LostFocus="SequenceNameTextBox_OnLostFocus">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Enter"
+                                                            Command="{Binding DataContext.CommitSequenceEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" />
+                                                <KeyBinding Key="Escape"
+                                                            Command="{Binding DataContext.CancelSequenceEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" />
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Border>
                 </Grid>
 
@@ -247,6 +297,7 @@
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="6" />
                                                             <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
                                                         <materialDesign:PackIcon Grid.Column="0"
                                                                                  Width="12"
@@ -260,6 +311,15 @@
                                                                    Opacity="0.92"
                                                                    Text="{Binding DisplayName}"
                                                                    TextTrimming="CharacterEllipsis" />
+                                                        <Button Grid.Column="3"
+                                                                Padding="4"
+                                                                Margin="8,0,0,0"
+                                                                Command="{Binding DataContext.DeleteSubTestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}">
+                                                            <materialDesign:PackIcon Width="14"
+                                                                                     Height="14"
+                                                                                     Kind="CloseCircleOutline" />
+                                                        </Button>
                                                     </Grid>
                                                 </Border>
                                             </DataTemplate>
@@ -276,6 +336,14 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="PlusCircleOutline" />
                             <TextBlock Text="Add Test" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SectionActionButtonStyle}"
+                            Command="{Binding AddSubTestCommand}"
+                            Visibility="{Binding IsMultipleTestSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="PlusCircleOutline" />
+                            <TextBlock Text="Add Sub-Test" />
                         </StackPanel>
                     </Button>
                     <Button Padding="12,7" MinWidth="118" Command="{Binding DeleteTestCommand}">

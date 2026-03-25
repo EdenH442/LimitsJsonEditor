@@ -8,6 +8,9 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class MainEditorViewModel : ObservableObject
 {
+    private const string SingleStepType = "SINGLE";
+    private const string MultipleStepType = "MULTIPLE";
+
     private readonly SharedFileContext _sharedFileContext;
     private readonly EditorFilteringSelectionService _filteringSelectionService;
     private readonly IAddTestDialogService _addTestDialogService;
@@ -17,6 +20,10 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     [ObservableProperty]
     private string statusMessage = "Ready";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddSequenceCommand))]
+    private bool isFileLoaded;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FindSequenceCommand))]
@@ -39,7 +46,11 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(SelectedRootTestItem))]
+    [NotifyPropertyChangedFor(nameof(IsStepTypeEditable))]
+    [NotifyCanExecuteChangedFor(nameof(AddSubTestCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
     private TestNavigationItemViewModel? selectedTestItem;
 
     [ObservableProperty]
@@ -57,6 +68,8 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
+    [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
     private Limit? selectedLimit;
 
     [ObservableProperty]
@@ -94,6 +107,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
             if (args.PropertyName == nameof(SharedFileContext.LoadedDocument))
             {
                 OnPropertyChanged(nameof(LoadedDocument));
+                IsFileLoaded = true;
                 IsDocumentDirty = false;
                 ReloadFromSharedDocument();
             }
@@ -116,11 +130,28 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public TestItemViewModel? SelectedTest => SelectedTestItem?.RootTest;
 
-    public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { "SINGLE", "MULTIPLE" };
+    public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { SingleStepType, MultipleStepType };
+
+    public bool IsStepTypeEditable => HasSelectedTest;
+
+    public string StepNameError => string.Empty;
+
+    public string StepTypeError => string.Empty;
+
+    public string CurrentSubTestNameError => string.Empty;
+
+    public string CurrentLimitTypeError => string.Empty;
+
+    public string CurrentComparisonTypeError => string.Empty;
+
+    public string CurrentResultError => string.Empty;
+
+    public string CurrentRangeError => string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanDeleteTest))]
     [NotifyCanExecuteChangedFor(nameof(DeleteTestCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSubTestCommand))]
     private TestNavigationItemViewModel? selectedRootTestItem;
 
     public bool HasSelectedSequence => SelectedSequence is not null;
@@ -129,9 +160,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public bool NotHasSelectedTest => !HasSelectedTest;
 
-    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, MultipleStepType, StringComparison.OrdinalIgnoreCase);
 
-    public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, "SINGLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, SingleStepType, StringComparison.OrdinalIgnoreCase);
 
 
     public bool IsSubTestItemSelected => SelectedTestItem?.IsSubTest == true;
@@ -169,7 +200,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     partial void OnSelectedRootTestItemChanged(TestNavigationItemViewModel? value)
     {
-        if (value is null || ReferenceEquals(value, SelectedTestItem) || SelectedTestItem?.IsSubTest == true && ReferenceEquals(value.RootTest.Model, SelectedTestItem.RootTest.Model))
+        if (value is null || ReferenceEquals(value, SelectedTestItem))
         {
             return;
         }
@@ -202,14 +233,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         SyncEditableFromSelection();
         UpdateNavigationSelectionState();
-        if (value.IsRoot)
-        {
-            SelectedRootTestItem = value;
-        }
-        else
-        {
-            SelectedRootTestItem = TestNavigationItems.FirstOrDefault(item => item.Matches(value.RootTest, null));
-        }
+        SelectedRootTestItem = value.IsRoot ? value : null;
 
         StatusMessage = $"Selected {(value.IsRoot ? "test" : "sub-test")} '{value.DisplayName}'.";
     }
@@ -245,22 +269,109 @@ public sealed partial class MainEditorViewModel : ObservableObject
         OnPropertyChanged(nameof(HasPendingChanges));
     }
 
+    private void MarkDocumentDirty()
+    {
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+    }
+
+
     [RelayCommand]
     private void FindSequence()
     {
         ApplySequenceFilter();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAddSequence))]
     private void AddSequence()
     {
-        StatusMessage = "Add Sequence workflow placeholder (not implemented yet).";
+        var baseName = "New Sequence";
+        var usedNames = LoadedDocument.Sequences
+            .Select(sequence => sequence.SeqName)
+            .ToList();
+
+        var newName = baseName;
+        var counter = 2;
+        while (usedNames.Any(name => string.Equals(name, newName, StringComparison.OrdinalIgnoreCase)))
+        {
+            newName = $"{baseName} {counter}";
+            counter++;
+        }
+
+        var newSequence = new Sequence
+        {
+            SeqName = newName,
+            StepList = new List<Step>()
+        };
+
+        LoadedDocument.Sequences.Add(newSequence);
+        ApplySequenceFilter(); //rebuilds the list of sequences
+
+        SelectedSequence = FilteredSequences.FirstOrDefault(item => ReferenceEquals(item.Model, newSequence));
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Added sequence '{newSequence.SeqName}'.";
+    }
+
+    private bool CanAddSequence() => IsFileLoaded;
+
+    [RelayCommand]
+    private void BeginSequenceEdit(SequenceItemViewModel? sequence)
+    {
+        sequence?.BeginEdit();
+    }
+
+    [RelayCommand]
+    private void CommitSequenceEdit(SequenceItemViewModel? sequence)
+    {
+        sequence?.CommitEdit();
+    }
+
+    [RelayCommand]
+    private void CancelSequenceEdit(SequenceItemViewModel? sequence)
+    {
+        sequence?.CancelEdit();
     }
 
     [RelayCommand(CanExecute = nameof(CanDeleteSequence))]
     private void DeleteSequence()
     {
-        StatusMessage = "Delete Sequence placeholder (not implemented yet).";
+        if (SelectedSequence is null)
+        {
+            return;
+        }
+
+        var sequenceToDelete = SelectedSequence.Model;
+        var sequenceName = sequenceToDelete.SeqName;
+        var confirmationMessage =
+            $"{Environment.NewLine} Delete sequence '{sequenceName}'?{Environment.NewLine}" +
+            "All tests will also be removed.";
+
+        var isConfirmed = _confirmationDialogService.ShowConfirmation(
+            confirmationMessage,
+            "Delete Sequence");
+
+        if (!isConfirmed)
+        {
+            StatusMessage = "Delete sequence canceled.";
+            return;
+        }
+
+        var previousIndex = FilteredSequences.IndexOf(SelectedSequence) - 1;
+
+        LoadedDocument.Sequences.Remove(sequenceToDelete);
+        ApplySequenceFilter();
+
+        if (FilteredSequences.Count > 0)
+        {
+            var clampedIndex = Math.Max(0, Math.Min(previousIndex, FilteredSequences.Count - 1));
+            SelectedSequence = FilteredSequences[clampedIndex];
+        }
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Deleted sequence '{sequenceName}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanAddTest))]
@@ -289,6 +400,30 @@ public sealed partial class MainEditorViewModel : ObservableObject
         IsDocumentDirty = true;
         DocumentEdited?.Invoke();
         StatusMessage = $"Added test '{createdStep.StepName}' to sequence '{SelectedSequence.Name}'.";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAddSubTest))]
+    private void AddSubTest()
+    {
+        if (SelectedTestItem is null)
+        {
+            return;
+        }
+
+        var rootTest = SelectedTestItem.RootTest.Model;
+        var newLimit = new Limit();
+        rootTest.LimitList.Add(newLimit);
+
+        if (SelectedSequence is not null)
+        {
+            var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+            RebuildTestNavigation(tests, null);
+        }
+
+        SelectSubTest(rootTest, newLimit);
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Added sub-test to '{rootTest.StepName}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanDeleteTest))]
@@ -360,12 +495,30 @@ public sealed partial class MainEditorViewModel : ObservableObject
         if (_targetTest is not null)
         {
             _targetTest.StepName = EditableStepName;
-            _targetTest.StepType = EditableStepType;
+            var stepTypeChanged = ApplyStepTypeChangeIfNeeded();
+            if (!stepTypeChanged)
+            {
+                _targetTest.StepType = EditableStepType;
+            }
+
+            if (stepTypeChanged && SelectedSequence is not null)
+            {
+                var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+                RebuildTestNavigation(tests, SelectedTestItem);
+                SelectRootTest(_targetTest);
+            }
         }
 
         if (_targetLimit is not null && EditableLimit is not null)
         {
-            CopyLimitValues(EditableLimit, _targetLimit);
+            EditableLimit.ApplyTo(_targetLimit);
+
+            if (SelectedSequence is not null && SelectedTestItem?.IsSubTest == true)
+            {
+                var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+                RebuildTestNavigation(tests, null);
+                SelectSubTest(_targetTest!, _targetLimit);
+            }
         }
 
         RefreshSelectedLimitView();
@@ -373,6 +526,35 @@ public sealed partial class MainEditorViewModel : ObservableObject
         IsDocumentDirty = true;
         DocumentEdited?.Invoke();
         StatusMessage = "Applied in-memory edits to selected item.";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanDeleteSubTest))]
+    private void DeleteSubTest(TestNavigationItemViewModel? subTestItem)
+    {
+        if (subTestItem is null || !subTestItem.IsSubTest || SelectedSequence is null)
+        {
+            return;
+        }
+
+        var rootTest = subTestItem.RootTest.Model;
+        var subTestLimit = subTestItem.SubTestLimit;
+        if (subTestLimit is null)
+        {
+            return;
+        }
+
+        if (!rootTest.LimitList.Remove(subTestLimit))
+        {
+            return;
+        }
+
+        var tests = _filteringSelectionService.BuildTestsForSequence(SelectedSequence);
+        RebuildTestNavigation(tests, null);
+        SelectRootTest(rootTest);
+
+        IsDocumentDirty = true;
+        DocumentEdited?.Invoke();
+        StatusMessage = $"Deleted sub-test from '{rootTest.StepName}'.";
     }
 
     [RelayCommand(CanExecute = nameof(CanCancelEdit))]
@@ -384,11 +566,18 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private bool CanAddTest() => SelectedSequence is not null;
 
+    private bool CanAddSubTest() => IsMultipleTestSelected && SelectedTestItem is not null;
+
     private bool CanDeleteSelectedRootTest()
     {
         return SelectedSequence is not null
             && SelectedRootTestItem is not null
             && SelectedSequence.Model.StepList.Contains(SelectedRootTestItem.RootTest.Model);
+    }
+
+    private bool CanDeleteSubTest(TestNavigationItemViewModel? subTestItem)
+    {
+        return SelectedSequence is not null && subTestItem?.IsSubTest == true;
     }
 
     private bool CanSaveChanges() => SelectedTestItem is not null && HasPendingChanges;
@@ -433,6 +622,23 @@ public sealed partial class MainEditorViewModel : ObservableObject
         SelectedTestItem = TestNavigationItems.FirstOrDefault(item => item.IsRoot && ReferenceEquals(item.RootTest.Model, step));
     }
 
+    private void SelectSubTest(Step rootTest, Limit subTest)
+    {
+        var selection = TestNavigationItems
+            .SelectMany(root => root.SubTests)
+            .FirstOrDefault(item =>
+                ReferenceEquals(item.RootTest.Model, rootTest) &&
+                ReferenceEquals(item.SubTestLimit, subTest));
+
+        if (selection is null)
+        {
+            return;
+        }
+
+        SelectedTestItem = selection;
+        UpdateNavigationSelectionState();
+    }
+
     private static Step CreateStep(AddTestDialogSubmission submission)
     {
         return new Step
@@ -469,7 +675,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     private void ApplySequenceFilter()
     {
-        var filteredSequences = _filteringSelectionService.BuildFilteredSequences(LoadedDocument, SearchText);
+        var filteredSequences = _filteringSelectionService.BuildFilteredSequences(LoadedDocument, SearchText, MarkDocumentDirty);
 
         ResetAllSelection();
         ReplaceWith(FilteredSequences, filteredSequences);
@@ -633,20 +839,66 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
     }
 
-    private static void CopyLimitValues(EditableLimitViewModel source, Limit destination)
-    {
-        destination.MultipleStepNameCheck = source.MultipleStepNameCheck;
-        destination.LimitType = source.LimitType;
-        destination.ComparisonType = source.ComparisonType;
-        destination.ThresholdType = source.ThresholdType;
-        destination.ExpectedRes = source.ExpectedRes;
-        destination.Low = source.Low;
-        destination.High = source.High;
-        destination.Unit = source.Unit;
-    }
-
     private static bool IsMultipleRootTest(Step step)
     {
-        return string.Equals(step.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(step.StepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsMultipleStepType(string stepType)
+    {
+        return string.Equals(stepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSingleStepType(string stepType)
+    {
+        return string.Equals(stepType, SingleStepType, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool ApplyStepTypeChangeIfNeeded()
+    {
+        if (_targetTest is null || string.IsNullOrWhiteSpace(EditableStepType))
+        {
+            return false;
+        }
+
+        if (string.Equals(_targetTest.StepType, EditableStepType, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var wasMultiple = IsMultipleStepType(_targetTest.StepType);
+        var willBeMultiple = IsMultipleStepType(EditableStepType);
+
+        if (!wasMultiple && willBeMultiple)
+        {
+            ConvertSingleToMultiple(_targetTest);
+        }
+        else if (wasMultiple && !willBeMultiple)
+        {
+            ConvertMultipleToSingle(_targetTest);
+        }
+
+        _targetTest.StepType = EditableStepType;
+        return true;
+    }
+
+    private static void ConvertSingleToMultiple(Step step)
+    {
+        foreach (var limit in step.LimitList)
+        {
+            limit.MultipleStepNameCheck = string.Empty;
+        }
+    }
+
+    private static void ConvertMultipleToSingle(Step step)
+    {
+        if (step.LimitList.Count == 0)
+        {
+            return;
+        }
+
+        var firstLimit = step.LimitList[0];
+        firstLimit.MultipleStepNameCheck = string.Empty;
+        step.LimitList = new List<Limit> { firstLimit };
     }
 }

@@ -4,7 +4,7 @@ namespace LimitsEditor.ViewModels;
 
 public sealed class EditorFilteringSelectionService
 {
-    public IReadOnlyList<SequenceItemViewModel> BuildFilteredSequences(LimitaDocument document, string query)
+    public IReadOnlyList<SequenceItemViewModel> BuildFilteredSequences(LimitaDocument document, string query, Action onEdited)
     {
         var trimmedQuery = query.Trim();
         var matches = string.IsNullOrWhiteSpace(trimmedQuery)
@@ -14,7 +14,12 @@ public sealed class EditorFilteringSelectionService
                 .ToList();
 
         return matches
-            .Select(sequence => new SequenceItemViewModel(sequence))
+            .Select(sequence => 
+            {
+                var vm =new SequenceItemViewModel(sequence);
+                vm.Edited = onEdited;
+                return vm;
+                })
             .ToList();
     }
 

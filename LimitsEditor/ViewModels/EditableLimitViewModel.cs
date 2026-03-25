@@ -59,6 +59,18 @@ public sealed partial class EditableLimitViewModel : ObservableObject
         };
     }
 
+    public void ApplyTo(Limit destination)
+    {
+        destination.MultipleStepNameCheck = MultipleStepNameCheck;
+        destination.LimitType = LimitType;
+        destination.ComparisonType = ComparisonType;
+        destination.ThresholdType = ThresholdType;
+        destination.ExpectedRes = ExpectedRes;
+        destination.Low = Low;
+        destination.High = High;
+        destination.Unit = Unit;
+    }
+
     public bool HasChangesComparedTo(Limit target)
     {
         return MultipleStepNameCheck != target.MultipleStepNameCheck ||

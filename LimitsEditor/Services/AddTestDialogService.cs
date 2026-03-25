@@ -19,7 +19,7 @@ public sealed class AddTestDialogService : IAddTestDialogService
         var viewModel = new AddTestDialogViewModel(sequenceName, _addTestCreationValidator);
         var dialog = new AddTestDialog
         {
-            Owner = Application.Current.MainWindow,
+            Owner = Application.Current?.MainWindow,
             DataContext = viewModel
         };
 

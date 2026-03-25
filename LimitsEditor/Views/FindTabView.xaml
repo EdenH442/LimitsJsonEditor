@@ -19,21 +19,30 @@
 
         <materialDesign:Card Padding="16" UniformCornerRadius="10">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <TextBox Grid.Column="0"
-                         Margin="0,0,10,0"
-                         materialDesign:HintAssist.Hint="Sequence search"
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="2" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               FontWeight="SemiBold"
+                               Text="Find" />
+                    <TextBlock Grid.Row="2"
+                               Opacity="0.7"
+                               Text="Filters sequences as you type" />
+                </Grid>
+
+                <TextBox Grid.Row="2"
+                         materialDesign:HintAssist.Hint="Find sequences"
                          Text="{Binding SequenceSearchText, UpdateSourceTrigger=PropertyChanged}" />
-
-                <Button Grid.Column="1"
-                        Padding="14,6"
-                        Command="{Binding FindSequenceCommand}">
-                    <TextBlock Text="Find" />
-                </Button>
             </Grid>
         </materialDesign:Card>
 

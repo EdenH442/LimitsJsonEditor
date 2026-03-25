@@ -126,24 +126,24 @@
                     </Grid.RowDefinitions>
 
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="4" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="6" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                        <TextBox Grid.Column="0"
+                        <TextBlock Grid.Row="0"
+                                   FontWeight="SemiBold"
+                                   Text="Find" />
+                        <TextBlock Grid.Row="2"
+                                   Style="{StaticResource SubtleTextStyle}"
+                                   Text="Filters sequences as you type" />
+
+                        <TextBox Grid.Row="4"
                                  materialDesign:HintAssist.Hint="Search by sequence name"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
-
-                        <Button Grid.Column="2"
-                                Padding="14,7"
-                                Command="{Binding FindSequenceCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="Magnify" />
-                                <TextBlock Text="Find" />
-                            </StackPanel>
-                        </Button>
                     </Grid>
 
                     <Border Grid.Row="2" Style="{StaticResource ListPanelBorderStyle}">

@@ -59,7 +59,11 @@
 
                                     <WrapPanel Grid.Row="0" ItemWidth="170">
                                         <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="MultipleStepNameCheck" Text="{Binding MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged}" />
-                                        <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="LimitType" Text="{Binding LimitType, UpdateSourceTrigger=PropertyChanged}" />
+                                        <ComboBox Width="158"
+                                                  Margin="0,0,12,8"
+                                                  materialDesign:HintAssist.Hint="LimitType"
+                                                  ItemsSource="{Binding DataContext.AvailableLimitTypes, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedItem="{Binding LimitTypeValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                         <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="ComparisonType" Text="{Binding ComparisonType, UpdateSourceTrigger=PropertyChanged}" />
                                         <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="ThresholdType" Text="{Binding ThresholdType, UpdateSourceTrigger=PropertyChanged}" />
                                         <TextBox Width="158" Margin="0,0,12,8" materialDesign:HintAssist.Hint="ExpectedRes" Text="{Binding ExpectedRes, UpdateSourceTrigger=PropertyChanged}" />

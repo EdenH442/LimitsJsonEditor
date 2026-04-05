@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LimitsEditor.Models;
 using LimitsEditor.Validation;
 using AddTestDialogSubmission = LimitsEditor.Services.AddTestDialogSubmission;
 using AddTestLimitSubmission = LimitsEditor.Services.AddTestLimitSubmission;
@@ -11,9 +12,6 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class AddTestDialogViewModel : ObservableObject
 {
-    private const string SingleStepType = "SINGLE";
-    private const string MultipleStepType = "MULTIPLE";
-
     private readonly EditableLimitViewModel _rootLimitDraft = new();
     private readonly IAddTestCreationValidator _addTestCreationValidator;
     private AddTestSubTestItemViewModel? _lastSelectedSubTestDraft;
@@ -23,7 +21,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         _addTestCreationValidator = addTestCreationValidator;
         SequenceName = sequenceName;
-        availableStepTypes = new[] { SingleStepType, MultipleStepType };
+        availableStepTypes = StepTypeSerialization.All;
         EditableLimit = _rootLimitDraft;
         _rootLimitDraft.PropertyChanged += OnRootLimitPropertyChanged;
         SubTests.CollectionChanged += OnSubTestsCollectionChanged;
@@ -41,7 +39,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSubTestItemSelected))]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
     [NotifyPropertyChangedFor(nameof(HasSubTests))]
-    private string editableStepType = SingleStepType;
+    private StepType editableStepType = StepType.Single;
 
     [ObservableProperty]
     private string statusMessage = "Create a test and confirm to append it to the selected sequence.";
@@ -88,13 +86,15 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     private EditableLimitViewModel? editableLimit;
 
     [ObservableProperty]
-    private IReadOnlyList<string> availableStepTypes;
+    private IReadOnlyList<StepType> availableStepTypes;
 
     public ObservableCollection<AddTestSubTestItemViewModel> SubTests { get; } = new();
 
     public bool IsStepTypeEditable => true;
 
-    public bool IsMultipleTest => string.Equals(EditableStepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
+    public IReadOnlyList<LimitType> AvailableLimitTypes => LimitTypeSerialization.All;
+
+    public bool IsMultipleTest => EditableStepType == StepType.Multiple;
 
     public bool ShowSubTestsSection => IsMultipleTest;
 
@@ -115,11 +115,11 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
         Revalidate();
     }
 
-    partial void OnEditableStepTypeChanged(string value)
+    partial void OnEditableStepTypeChanged(StepType value)
     {
         HasAttemptedConfirm = false;
 
-        if (string.Equals(value, MultipleStepType, StringComparison.OrdinalIgnoreCase))
+        if (value == StepType.Multiple)
         {
             RestoreMultipleSelection();
         }
@@ -222,7 +222,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         return new AddTestDialogSubmission(
             EditableStepName.Trim(),
-            IsMultipleTest ? MultipleStepType : SingleStepType,
+            StepTypeSerialization.ToSerialized(EditableStepType),
             IsMultipleTest
                 ? SubTests.Select(item => ToSubmission(item.EditableLimit)).ToList()
                 : new List<AddTestLimitSubmission> { ToSubmission(_rootLimitDraft) });
@@ -237,7 +237,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
     {
         return new AddTestLimitSubmission(
             source.MultipleStepNameCheck,
-            source.LimitType,
+            LimitTypeSerialization.ToSerialized(source.LimitType),
             source.ComparisonType,
             source.ThresholdType,
             source.ExpectedRes,
@@ -389,7 +389,7 @@ public sealed partial class AddTestDialogViewModel : ObservableObject
         return new AddTestLimitDraft
         {
             Name = source.MultipleStepNameCheck,
-            LimitType = source.LimitType,
+            LimitType = LimitTypeSerialization.ToSerialized(source.LimitType),
             ComparisonType = source.ComparisonType,
             ExpectedRes = source.ExpectedRes,
             Low = source.Low,

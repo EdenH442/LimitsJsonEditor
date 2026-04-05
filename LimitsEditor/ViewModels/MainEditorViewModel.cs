@@ -8,9 +8,6 @@ namespace LimitsEditor.ViewModels;
 
 public sealed partial class MainEditorViewModel : ObservableObject
 {
-    private const string SingleStepType = "SINGLE";
-    private const string MultipleStepType = "MULTIPLE";
-
     private readonly SharedFileContext _sharedFileContext;
     private readonly EditorFilteringSelectionService _filteringSelectionService;
     private readonly IAddTestDialogService _addTestDialogService;
@@ -63,7 +60,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasPendingChanges))]
     [NotifyCanExecuteChangedFor(nameof(SaveChangesCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelEditCommand))]
-    private string editableStepType = string.Empty;
+    private StepType? editableStepType;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEditableLimit))]
@@ -130,7 +127,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public TestItemViewModel? SelectedTest => SelectedTestItem?.RootTest;
 
-    public IReadOnlyList<string> AvailableStepTypes { get; } = new[] { SingleStepType, MultipleStepType };
+    public IReadOnlyList<StepType> AvailableStepTypes { get; } = StepTypeSerialization.All;
+
+    public IReadOnlyList<LimitType> AvailableLimitTypes { get; } = LimitTypeSerialization.All;
 
     public bool IsStepTypeEditable => HasSelectedTest;
 
@@ -160,9 +159,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
     public bool NotHasSelectedTest => !HasSelectedTest;
 
-    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.Type, MultipleStepType, StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleTestSelected => SelectedTest?.StepTypeValue == StepType.Multiple;
 
-    public bool IsSingleTestSelected => string.Equals(SelectedTest?.Type, SingleStepType, StringComparison.OrdinalIgnoreCase);
+    public bool IsSingleTestSelected => SelectedTest?.StepTypeValue == StepType.Single;
 
 
     public bool IsSubTestItemSelected => SelectedTestItem?.IsSubTest == true;
@@ -496,9 +495,9 @@ public sealed partial class MainEditorViewModel : ObservableObject
         {
             _targetTest.StepName = EditableStepName;
             var stepTypeChanged = ApplyStepTypeChangeIfNeeded();
-            if (!stepTypeChanged)
+            if (!stepTypeChanged && EditableStepType.HasValue)
             {
-                _targetTest.StepType = EditableStepType;
+                _targetTest.StepTypeValue = EditableStepType.Value;
             }
 
             if (stepTypeChanged && SelectedSequence is not null)
@@ -717,7 +716,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         var step = SelectedTestItem.RootTest.Model;
         _targetTest = step;
         EditableStepName = step.StepName;
-        EditableStepType = step.StepType;
+        EditableStepType = step.StepTypeValue;
 
         var targetLimit = ResolveLimitForEdit();
         if (targetLimit is null)
@@ -808,7 +807,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     {
         _targetTest = null;
         EditableStepName = string.Empty;
-        EditableStepType = string.Empty;
+        EditableStepType = null;
         _targetLimit = null;
         EditableLimit = null;
         OnPropertyChanged(nameof(HasPendingChanges));
@@ -821,8 +820,11 @@ public sealed partial class MainEditorViewModel : ObservableObject
             return false;
         }
 
+        var stepTypeChanged = EditableStepType.HasValue
+            && EditableStepType.Value != _targetTest.StepTypeValue;
+
         return !string.Equals(EditableStepName, _targetTest.StepName, StringComparison.Ordinal)
-            || !string.Equals(EditableStepType, _targetTest.StepType, StringComparison.Ordinal);
+            || stepTypeChanged;
     }
 
     private bool HasLimitChanges()
@@ -839,35 +841,22 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
     }
 
-    private static bool IsMultipleRootTest(Step step)
-    {
-        return string.Equals(step.StepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsMultipleStepType(string stepType)
-    {
-        return string.Equals(stepType, MultipleStepType, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsSingleStepType(string stepType)
-    {
-        return string.Equals(stepType, SingleStepType, StringComparison.OrdinalIgnoreCase);
-    }
+    private static bool IsMultipleRootTest(Step step) => step.StepTypeValue == StepType.Multiple;
 
     private bool ApplyStepTypeChangeIfNeeded()
     {
-        if (_targetTest is null || string.IsNullOrWhiteSpace(EditableStepType))
+        if (_targetTest is null || !EditableStepType.HasValue)
         {
             return false;
         }
 
-        if (string.Equals(_targetTest.StepType, EditableStepType, StringComparison.OrdinalIgnoreCase))
+        if (_targetTest.StepTypeValue == EditableStepType.Value)
         {
             return false;
         }
 
-        var wasMultiple = IsMultipleStepType(_targetTest.StepType);
-        var willBeMultiple = IsMultipleStepType(EditableStepType);
+        var wasMultiple = _targetTest.StepTypeValue == StepType.Multiple;
+        var willBeMultiple = EditableStepType.Value == StepType.Multiple;
 
         if (!wasMultiple && willBeMultiple)
         {
@@ -878,7 +867,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
             ConvertMultipleToSingle(_targetTest);
         }
 
-        _targetTest.StepType = EditableStepType;
+        _targetTest.StepTypeValue = EditableStepType.Value;
         return true;
     }
 

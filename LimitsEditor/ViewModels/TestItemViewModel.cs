@@ -15,5 +15,7 @@ public sealed class TestItemViewModel
 
     public string Type => Model.StepType;
 
+    public StepType StepTypeValue => Model.StepTypeValue;
+
     public IReadOnlyList<Limit> Limits => Model.LimitList;
 }

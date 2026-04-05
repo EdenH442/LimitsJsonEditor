@@ -25,7 +25,7 @@ public sealed partial class AddTabViewModel : ObservableObject
     private string stepName = string.Empty;
 
     [ObservableProperty]
-    private string stepType = "SINGLE";
+    private StepType stepType = StepType.Single;
 
     [ObservableProperty]
     private bool overwriteExisting;
@@ -41,8 +41,9 @@ public sealed partial class AddTabViewModel : ObservableObject
         _jsonUpsertService = jsonUpsertService;
         _testItemValidator = testItemValidator;
 
-        Limits = new ObservableCollection<Limit> { new() };
-        AvailableStepTypes = new[] { "SINGLE", "MULTIPLE" };
+        Limits = new ObservableCollection<Limit> { CreateLimit() };
+        AvailableStepTypes = StepTypeSerialization.All;
+        AvailableLimitTypes = LimitTypeSerialization.All;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -55,14 +56,16 @@ public sealed partial class AddTabViewModel : ObservableObject
 
     public ObservableCollection<Limit> Limits { get; }
 
-    public IReadOnlyList<string> AvailableStepTypes { get; }
+    public IReadOnlyList<StepType> AvailableStepTypes { get; }
+
+    public IReadOnlyList<LimitType> AvailableLimitTypes { get; }
 
     public string SelectedFilePath => _sharedFileContext.SelectedFilePath;
 
     [RelayCommand]
     private void AddLimit()
     {
-        Limits.Add(new Limit());
+        Limits.Add(CreateLimit());
         StatusMessage = $"Added limit ({Limits.Count} total).";
     }
 
@@ -77,11 +80,20 @@ public sealed partial class AddTabViewModel : ObservableObject
         Limits.Remove(value);
         if (Limits.Count == 0)
         {
-            Limits.Add(new Limit());
+            Limits.Add(CreateLimit());
         }
 
         StatusMessage = "Removed limit.";
     }
+
+    private static Limit CreateLimit()
+    {
+        return new Limit
+        {
+            LimitType = LimitTypeSerialization.ComparisonSerialized
+        };
+    }
+
 
     [RelayCommand]
     private async Task ApplyChangesAsync()
@@ -98,7 +110,7 @@ public sealed partial class AddTabViewModel : ObservableObject
             Step = new Step
             {
                 StepName = StepName,
-                StepType = StepType,
+                StepType = StepTypeSerialization.ToSerialized(StepType),
                 LimitList = Limits.ToList()
             },
             OverwriteIfExists = OverwriteExisting

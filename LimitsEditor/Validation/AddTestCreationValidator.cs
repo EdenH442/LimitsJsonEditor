@@ -1,3 +1,6 @@
+using System;
+using LimitsEditor.Models;
+
 namespace LimitsEditor.Validation;
 
 public sealed class AddTestCreationValidator : IAddTestCreationValidator
@@ -15,8 +18,19 @@ public sealed class AddTestCreationValidator : IAddTestCreationValidator
             });
         }
 
-        var isSingle = string.Equals(request.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
-        var isMultiple = string.Equals(request.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+        if (!Enum.IsDefined(typeof(StepType), request.StepType))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = AddTestValidationTargets.StepType,
+                Message = "Test type must be SINGLE or MULTIPLE."
+            });
+
+            return result;
+        }
+
+        var isSingle = request.StepType == StepType.Single;
+        var isMultiple = request.StepType == StepType.Multiple;
         if (!isSingle && !isMultiple)
         {
             result.AddIssue(new ValidationIssue

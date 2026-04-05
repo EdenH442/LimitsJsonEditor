@@ -56,9 +56,9 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public Action<Limit>? EditRequested { get; set; }
 
-    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleTestSelected => SelectedTest?.StepTypeValue == StepType.Multiple;
 
-    public bool IsSingleTestSelected => string.Equals(SelectedTest?.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsSingleTestSelected => SelectedTest?.StepTypeValue == StepType.Single;
 
     public void RefreshSelectedLimitView()
     {

@@ -30,7 +30,7 @@ public sealed partial class TestNavigationItemViewModel : ObservableObject
     [ObservableProperty]
     private bool isSelected;
 
-    public bool IsMultipleRoot => IsRoot && string.Equals(RootTest.Type, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleRoot => IsRoot && RootTest.StepTypeValue == StepType.Multiple;
 
     public bool HasSubTests => SubTests.Count > 0;
 

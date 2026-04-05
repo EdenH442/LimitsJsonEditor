@@ -1,10 +1,12 @@
+using LimitsEditor.Models;
+
 namespace LimitsEditor.Validation;
 
 public sealed class AddTestCreationRequest
 {
     public string StepName { get; init; } = string.Empty;
 
-    public string StepType { get; init; } = string.Empty;
+    public StepType StepType { get; init; }
 
     public AddTestLimitDraft RootLimit { get; init; } = new();
 

@@ -49,9 +49,10 @@
                              Text="{Binding EditableLimit.MultipleStepNameCheck, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Limit Type" />
-                    <TextBox Grid.Row="2"
-                             Grid.Column="2"
-                             Text="{Binding EditableLimit.LimitType, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                    <ComboBox Grid.Row="2"
+                              Grid.Column="2"
+                              ItemsSource="{Binding AvailableLimitTypes}"
+                              SelectedItem="{Binding EditableLimit.LimitType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
                     <TextBox Grid.Row="4"

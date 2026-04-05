@@ -69,7 +69,10 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Limit Type" />
-            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding EditableLimit.LimitType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <ComboBox Grid.Row="0"
+                      Grid.Column="2"
+                      ItemsSource="{Binding AvailableLimitTypes}"
+                      SelectedItem="{Binding EditableLimit.LimitType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Grid.Row="2"
                        Grid.Column="2"
                        Foreground="IndianRed"

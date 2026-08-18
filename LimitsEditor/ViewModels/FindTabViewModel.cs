@@ -82,7 +82,7 @@ public sealed partial class FindTabViewModel : ObservableObject
         }
 
         ReplaceWith(TestsInSelectedSequence, value.StepList);
-        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SeqName}'.";
+        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SequenceName}'.";
     }
 
     partial void OnSelectedTestChanged(Step? value)
@@ -150,7 +150,7 @@ public sealed partial class FindTabViewModel : ObservableObject
         var query = SequenceSearchText.Trim();
         var matches = string.IsNullOrWhiteSpace(query)
             ? _sharedFileContext.LoadedDocument.Sequences
-            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SeqName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SequenceName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 
         ResetAllFindState();
         ReplaceWith(MatchingSequences, matches);

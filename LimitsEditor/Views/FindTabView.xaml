@@ -66,7 +66,7 @@
                     <TextBlock FontWeight="SemiBold" Text="Sequences" />
                     <ListBox Grid.Row="2"
                              ItemsSource="{Binding MatchingSequences}"
-                             DisplayMemberPath="SeqName"
+                             DisplayMemberPath="SequenceName"
                              SelectedItem="{Binding SelectedSequence}" />
                 </Grid>
             </materialDesign:Card>

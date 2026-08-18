@@ -87,12 +87,13 @@ public sealed class AddTestCreationValidator : IAddTestCreationValidator
             });
         }
 
-        if (string.IsNullOrWhiteSpace(limit.ComparisonType))
+        if (string.Equals(limit.LimitType, LimitTypeSerialization.ComparisonSerialized, StringComparison.OrdinalIgnoreCase) &&
+            !ComparisonTypeOption.IsValidCode(limit.ComparisonType))
         {
             result.AddIssue(new ValidationIssue
             {
                 Target = targetPrefix + AddTestValidationTargets.ComparisonTypeSuffix,
-                Message = "Comparison is required."
+                Message = "Select a valid comparison."
             });
         }
 

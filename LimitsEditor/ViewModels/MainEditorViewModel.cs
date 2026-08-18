@@ -286,7 +286,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
     {
         var baseName = "New Sequence";
         var usedNames = LoadedDocument.Sequences
-            .Select(sequence => sequence.SeqName)
+            .Select(sequence => sequence.SequenceName)
             .ToList();
 
         var newName = baseName;
@@ -299,7 +299,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         var newSequence = new Sequence
         {
-            SeqName = newName,
+            SequenceName = newName,
             StepList = new List<Step>()
         };
 
@@ -310,7 +310,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
 
         IsDocumentDirty = true;
         DocumentEdited?.Invoke();
-        StatusMessage = $"Added sequence '{newSequence.SeqName}'.";
+        StatusMessage = $"Added sequence '{newSequence.SequenceName}'.";
     }
 
     private bool CanAddSequence() => IsFileLoaded;
@@ -342,7 +342,7 @@ public sealed partial class MainEditorViewModel : ObservableObject
         }
 
         var sequenceToDelete = SelectedSequence.Model;
-        var sequenceName = sequenceToDelete.SeqName;
+        var sequenceName = sequenceToDelete.SequenceName;
         var confirmationMessage =
             $"{Environment.NewLine} Delete sequence '{sequenceName}'?{Environment.NewLine}" +
             "All tests will also be removed.";

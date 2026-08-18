@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:LimitsEditor.Models"
              mc:Ignorable="d">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -79,8 +80,35 @@
                        Style="{StaticResource SubtleTextStyle}"
                        Text="{Binding CurrentLimitTypeError}" />
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison" />
-            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableLimit.ComparisonType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Comparison">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding EditableLimit.LimitType}" Value="{x:Static models:LimitType.Comparison}">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <ComboBox Grid.Row="4"
+                      Grid.Column="2"
+                      DisplayMemberPath="DisplayText"
+                      ItemsSource="{x:Static models:ComparisonTypeOption.All}"
+                      SelectedValue="{Binding EditableLimit.ComparisonType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      SelectedValuePath="Code">
+                <ComboBox.Style>
+                    <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding EditableLimit.LimitType}" Value="{x:Static models:LimitType.Comparison}">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
+            </ComboBox>
             <TextBlock Grid.Row="6"
                        Grid.Column="2"
                        Foreground="IndianRed"

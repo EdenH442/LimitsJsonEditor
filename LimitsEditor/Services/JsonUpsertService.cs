@@ -25,12 +25,12 @@ public sealed class JsonUpsertService : IJsonUpsertService
         }
 
         var sequence = document.Sequences.FirstOrDefault(s =>
-            string.Equals(s.SeqName, request.SequenceName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(s.SequenceName, request.SequenceName, StringComparison.OrdinalIgnoreCase));
 
         var sequenceCreated = false;
         if (sequence is null)
         {
-            sequence = new Sequence { SeqName = request.SequenceName };
+            sequence = new Sequence { SequenceName = request.SequenceName };
             document.Sequences.Add(sequence);
             sequenceCreated = true;
         }

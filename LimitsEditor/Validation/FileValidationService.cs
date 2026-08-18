@@ -123,11 +123,11 @@ public sealed class FileValidationService : IFileValidationService
         for (var i = 0; i < document.Sequences.Count; i++)
         {
             var sequence = document.Sequences[i];
-            if (string.IsNullOrWhiteSpace(sequence.SeqName))
+            if (string.IsNullOrWhiteSpace(sequence.SequenceName))
             {
                 result.AddIssue(new ValidationIssue
                 {
-                    Target = $"Sequences[{i}].SeqName",
+                    Target = $"Sequences[{i}].SequenceName",
                     Message = "Sequence name cannot be empty."
                 });
             }

@@ -17,6 +17,7 @@ public partial class MainEditorView : UserControl
     {
         if (sender is not ListBox listBox ||
             DataContext is not MainEditorViewModel viewModel ||
+            !ReferenceEquals(FindAncestor<ListBox>(e.OriginalSource as DependencyObject), listBox) ||
             FindAncestor<Button>(e.OriginalSource as DependencyObject) is not null ||
             ItemsControl.ContainerFromElement(listBox, e.OriginalSource as DependencyObject) is not ListBoxItem item ||
             item.DataContext is not TestNavigationItemViewModel clickedTest ||

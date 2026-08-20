@@ -284,9 +284,22 @@ public sealed partial class MainEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddSequence))]
     private void AddSequence()
     {
+        var baseName = "New Sequence";
+        var usedNames = LoadedDocument.Sequences
+            .Select(sequence => sequence.SequenceName)
+            .ToList();
+
+        var newName = baseName;
+        var counter = 2;
+        while (usedNames.Any(name => string.Equals(name, newName, StringComparison.OrdinalIgnoreCase)))
+        {
+            newName = $"{baseName} {counter}";
+            counter++;
+        }
+
         var newSequence = new Sequence
         {
-            SequenceName = "New Sequence",
+            SequenceName = newName,
             StepList = new List<Step>()
         };
 

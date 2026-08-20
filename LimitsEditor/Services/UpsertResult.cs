@@ -10,10 +10,6 @@ public sealed class UpsertResult
 
     public bool TestAdded { get; init; }
 
-    public bool TestOverwritten { get; init; }
-
-    public bool RequiresOverwriteConfirmation { get; init; }
-
     public ValidationResult Validation { get; init; } = new();
 
     public string Message { get; init; } = string.Empty;

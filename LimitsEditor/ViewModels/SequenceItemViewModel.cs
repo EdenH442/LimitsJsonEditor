@@ -12,7 +12,7 @@ public sealed partial class SequenceItemViewModel : ObservableObject
 
     public Sequence Model { get; }
 
-    public string Name => Model.SeqName;
+    public string Name => Model.SequenceName;
 
     public IReadOnlyList<Step> Steps => Model.StepList;
 
@@ -46,7 +46,7 @@ public sealed partial class SequenceItemViewModel : ObservableObject
             return;
         }
 
-        Model.SeqName = trimmed;
+        Model.SequenceName = trimmed;
         OnPropertyChanged(nameof(Name));
         IsEditing = false;
             Edited?.Invoke();

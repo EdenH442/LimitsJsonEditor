@@ -25,55 +25,27 @@ public sealed class JsonUpsertService : IJsonUpsertService
         }
 
         var sequence = document.Sequences.FirstOrDefault(s =>
-            string.Equals(s.SeqName, request.SequenceName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(s.SequenceName, request.SequenceName, StringComparison.OrdinalIgnoreCase));
 
         var sequenceCreated = false;
         if (sequence is null)
         {
-            sequence = new Sequence { SeqName = request.SequenceName };
+            sequence = new Sequence { SequenceName = request.SequenceName };
             document.Sequences.Add(sequence);
             sequenceCreated = true;
         }
 
-        var existingStep = sequence.StepList.FirstOrDefault(t =>
-            string.Equals(t.StepName, request.Step.StepName, StringComparison.OrdinalIgnoreCase));
-
-        if (existingStep is not null && !request.OverwriteIfExists)
-        {
-            return new UpsertResult
-            {
-                Status = OperationStatus.Conflict,
-                SequenceCreated = sequenceCreated,
-                RequiresOverwriteConfirmation = true,
-                Message = "A step with this name already exists in the selected sequence."
-            };
-        }
-
         var clonedStep = Clone(request.Step);
-
-        if (existingStep is null)
-        {
-            sequence.StepList.Add(clonedStep);
-            return new UpsertResult
-            {
-                Status = OperationStatus.Success,
-                SequenceCreated = sequenceCreated,
-                TestAdded = true,
-                Message = sequenceCreated
-                    ? "Created sequence and added step."
-                    : "Added step to existing sequence."
-            };
-        }
-
-        var existingIndex = sequence.StepList.IndexOf(existingStep);
-        sequence.StepList[existingIndex] = clonedStep;
+        sequence.StepList.Add(clonedStep);
 
         return new UpsertResult
         {
             Status = OperationStatus.Success,
             SequenceCreated = sequenceCreated,
-            TestOverwritten = true,
-            Message = "Existing step overwritten."
+            TestAdded = true,
+            Message = sequenceCreated
+                ? "Created sequence and added step."
+                : "Added step to existing sequence."
         };
     }
 

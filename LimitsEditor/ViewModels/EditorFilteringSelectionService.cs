@@ -10,7 +10,7 @@ public sealed class EditorFilteringSelectionService
         var matches = string.IsNullOrWhiteSpace(trimmedQuery)
             ? document.Sequences
             : document.Sequences
-                .Where(sequence => sequence.SeqName.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .Where(sequence => sequence.SequenceName.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
         return matches

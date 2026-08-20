@@ -1,3 +1,6 @@
+using System;
+using LimitsEditor.Models;
+
 namespace LimitsEditor.Validation;
 
 public sealed class AddTestCreationValidator : IAddTestCreationValidator
@@ -15,8 +18,19 @@ public sealed class AddTestCreationValidator : IAddTestCreationValidator
             });
         }
 
-        var isSingle = string.Equals(request.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
-        var isMultiple = string.Equals(request.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+        if (!Enum.IsDefined(typeof(StepType), request.StepType))
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = AddTestValidationTargets.StepType,
+                Message = "Test type must be SINGLE or MULTIPLE."
+            });
+
+            return result;
+        }
+
+        var isSingle = request.StepType == StepType.Single;
+        var isMultiple = request.StepType == StepType.Multiple;
         if (!isSingle && !isMultiple)
         {
             result.AddIssue(new ValidationIssue
@@ -73,16 +87,22 @@ public sealed class AddTestCreationValidator : IAddTestCreationValidator
             });
         }
 
-        if (string.IsNullOrWhiteSpace(limit.ComparisonType))
+        if (string.Equals(limit.LimitType, LimitTypeSerialization.ComparisonSerialized, StringComparison.OrdinalIgnoreCase) &&
+            !ComparisonTypeOption.IsValidCode(limit.ComparisonType))
         {
             result.AddIssue(new ValidationIssue
             {
                 Target = targetPrefix + AddTestValidationTargets.ComparisonTypeSuffix,
-                Message = "Comparison is required."
+                Message = "Select a valid comparison."
             });
         }
 
-        if (string.IsNullOrWhiteSpace(limit.ExpectedRes) && !limit.Low.HasValue && !limit.High.HasValue)
+        var isNoComparison = string.Equals(
+            limit.ComparisonType,
+            ComparisonTypeOption.NoComparisonCode,
+            StringComparison.Ordinal);
+
+        if (!isNoComparison && string.IsNullOrWhiteSpace(limit.ExpectedRes) && !limit.Low.HasValue && !limit.High.HasValue)
         {
             result.AddIssue(new ValidationIssue
             {

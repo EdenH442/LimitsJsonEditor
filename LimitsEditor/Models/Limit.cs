@@ -10,6 +10,13 @@ public sealed class Limit
     [JsonPropertyName("LimitType")]
     public string LimitType { get; set; } = string.Empty;
 
+    [Newtonsoft.Json.JsonIgnore]
+    public LimitType LimitTypeValue
+    {
+        get => LimitTypeSerialization.FromSerialized(LimitType);
+        set => LimitType = LimitTypeSerialization.ToSerialized(value);
+    }
+
     [JsonPropertyName("ComparisonType")]
     public string ComparisonType { get; set; } = string.Empty;
 

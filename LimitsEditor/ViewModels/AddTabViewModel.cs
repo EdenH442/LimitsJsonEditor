@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
@@ -25,10 +24,7 @@ public sealed partial class AddTabViewModel : ObservableObject
     private string stepName = string.Empty;
 
     [ObservableProperty]
-    private string stepType = "SINGLE";
-
-    [ObservableProperty]
-    private bool overwriteExisting;
+    private StepType stepType = StepType.Single;
 
     public AddTabViewModel(
         SharedFileContext sharedFileContext,
@@ -41,8 +37,9 @@ public sealed partial class AddTabViewModel : ObservableObject
         _jsonUpsertService = jsonUpsertService;
         _testItemValidator = testItemValidator;
 
-        Limits = new ObservableCollection<Limit> { new() };
-        AvailableStepTypes = new[] { "SINGLE", "MULTIPLE" };
+        Limits = new ObservableCollection<Limit> { CreateLimit() };
+        AvailableStepTypes = StepTypeSerialization.All;
+        AvailableLimitTypes = LimitTypeSerialization.All;
 
         _sharedFileContext.PropertyChanged += (_, args) =>
         {
@@ -55,14 +52,16 @@ public sealed partial class AddTabViewModel : ObservableObject
 
     public ObservableCollection<Limit> Limits { get; }
 
-    public IReadOnlyList<string> AvailableStepTypes { get; }
+    public IReadOnlyList<StepType> AvailableStepTypes { get; }
+
+    public IReadOnlyList<LimitType> AvailableLimitTypes { get; }
 
     public string SelectedFilePath => _sharedFileContext.SelectedFilePath;
 
     [RelayCommand]
     private void AddLimit()
     {
-        Limits.Add(new Limit());
+        Limits.Add(CreateLimit());
         StatusMessage = $"Added limit ({Limits.Count} total).";
     }
 
@@ -77,11 +76,20 @@ public sealed partial class AddTabViewModel : ObservableObject
         Limits.Remove(value);
         if (Limits.Count == 0)
         {
-            Limits.Add(new Limit());
+            Limits.Add(CreateLimit());
         }
 
         StatusMessage = "Removed limit.";
     }
+
+    private static Limit CreateLimit()
+    {
+        return new Limit
+        {
+            LimitType = LimitTypeSerialization.ComparisonSerialized
+        };
+    }
+
 
     [RelayCommand]
     private async Task ApplyChangesAsync()
@@ -98,10 +106,9 @@ public sealed partial class AddTabViewModel : ObservableObject
             Step = new Step
             {
                 StepName = StepName,
-                StepType = StepType,
+                StepType = StepTypeSerialization.ToSerialized(StepType),
                 LimitList = Limits.ToList()
-            },
-            OverwriteIfExists = OverwriteExisting
+            }
         };
 
         var validation = _testItemValidator.Validate(request);
@@ -114,30 +121,6 @@ public sealed partial class AddTabViewModel : ObservableObject
         var document = _sharedFileContext.LoadedDocument;
 
         var upsertResult = _jsonUpsertService.Upsert(document, request);
-        if (upsertResult.RequiresOverwriteConfirmation)
-        {
-            var overwrite = MessageBox.Show(
-                upsertResult.Message + " Overwrite?",
-                "Confirm overwrite",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (overwrite != MessageBoxResult.Yes)
-            {
-                StatusMessage = "Overwrite canceled by user.";
-                return;
-            }
-
-            request = new UpsertTestRequest
-            {
-                SequenceName = request.SequenceName,
-                Step = request.Step,
-                OverwriteIfExists = true
-            };
-
-            upsertResult = _jsonUpsertService.Upsert(document, request);
-        }
-
         if (upsertResult.Status != OperationStatus.Success)
         {
             StatusMessage = upsertResult.Message;

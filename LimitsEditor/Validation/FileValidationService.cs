@@ -120,21 +120,62 @@ public sealed class FileValidationService : IFileValidationService
     {
         var result = new ValidationResult();
 
+        if (document.Sequences is null)
+        {
+            result.AddIssue(new ValidationIssue
+            {
+                Target = nameof(document.Sequences),
+                Message = "The JSON document must contain a sequence array, not null."
+            });
+
+            return result;
+        }
+
         for (var i = 0; i < document.Sequences.Count; i++)
         {
             var sequence = document.Sequences[i];
-            if (string.IsNullOrWhiteSpace(sequence.SeqName))
+            if (sequence is null)
             {
                 result.AddIssue(new ValidationIssue
                 {
-                    Target = $"Sequences[{i}].SeqName",
+                    Target = $"Sequences[{i}]",
+                    Message = $"Sequence {i + 1} cannot be null."
+                });
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(sequence.SequenceName))
+            {
+                result.AddIssue(new ValidationIssue
+                {
+                    Target = $"Sequences[{i}].SequenceName",
                     Message = "Sequence name cannot be empty."
                 });
+            }
+
+            if (sequence.StepList is null)
+            {
+                result.AddIssue(new ValidationIssue
+                {
+                    Target = $"Sequences[{i}].StepList",
+                    Message = $"The step list in sequence {i + 1} cannot be null."
+                });
+                continue;
             }
 
             for (var j = 0; j < sequence.StepList.Count; j++)
             {
                 var step = sequence.StepList[j];
+                if (step is null)
+                {
+                    result.AddIssue(new ValidationIssue
+                    {
+                        Target = $"Sequences[{i}].StepList[{j}]",
+                        Message = $"Step {j + 1} in sequence {i + 1} cannot be null."
+                    });
+                    continue;
+                }
+
                 if (string.IsNullOrWhiteSpace(step.StepName))
                 {
                     result.AddIssue(new ValidationIssue
@@ -142,6 +183,48 @@ public sealed class FileValidationService : IFileValidationService
                         Target = $"Sequences[{i}].StepList[{j}].StepName",
                         Message = "Step name cannot be empty."
                     });
+                }
+
+                if (!StepTypeSerialization.TryFromSerialized(step.StepType, out _))
+                {
+                    result.AddIssue(new ValidationIssue
+                    {
+                        Target = $"Sequences[{i}].StepList[{j}].StepType",
+                        Message = $"Step type for '{step.StepName ?? $"step {j + 1}"}' must be SINGLE or MULTIPLE."
+                    });
+                }
+
+                if (step.LimitList is null)
+                {
+                    result.AddIssue(new ValidationIssue
+                    {
+                        Target = $"Sequences[{i}].StepList[{j}].LimitList",
+                        Message = $"The limit list for '{step.StepName ?? $"step {j + 1}"}' cannot be null."
+                    });
+                    continue;
+                }
+
+                for (var k = 0; k < step.LimitList.Count; k++)
+                {
+                    var limit = step.LimitList[k];
+                    if (limit is null)
+                    {
+                        result.AddIssue(new ValidationIssue
+                        {
+                            Target = $"Sequences[{i}].StepList[{j}].LimitList[{k}]",
+                            Message = $"Limit {k + 1} in '{step.StepName ?? $"step {j + 1}"}' cannot be null."
+                        });
+                        continue;
+                    }
+
+                    if (!LimitTypeSerialization.TryFromSerialized(limit.LimitType, out _))
+                    {
+                        result.AddIssue(new ValidationIssue
+                        {
+                            Target = $"Sequences[{i}].StepList[{j}].LimitList[{k}].LimitType",
+                            Message = $"Limit type for limit {k + 1} in '{step.StepName ?? $"step {j + 1}"}' is missing or unsupported."
+                        });
+                    }
                 }
             }
         }

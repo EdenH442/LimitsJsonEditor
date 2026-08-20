@@ -1,6 +1,6 @@
 [
   {
-    "seqName": "Sequence 1",
+    "SequenceName": "Sequence 1",
     "stepList": [
       {
         "StepName": "Test 1",
@@ -37,7 +37,7 @@
     ]
   },
   {
-    "seqName": "Sequence 2",
+    "SequenceName": "Sequence 2",
     "stepList": [
       {
         "StepName": "Test A",
@@ -56,11 +56,11 @@
           {
             "MultipleStepNameCheck": "Test A2",
             "LimitType": "NUMERIC",
-            "ComparisonType": "LE",
+            "ComparisonType": "GELE",
             "ThresholdType": "",
             "ExpectedRes": "",
             "Low": 1,
-            "High": null,
+            "High": 4,
             "Unit": ""
           }
         ]

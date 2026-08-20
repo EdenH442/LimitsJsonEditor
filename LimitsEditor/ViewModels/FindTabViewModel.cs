@@ -56,9 +56,9 @@ public sealed partial class FindTabViewModel : ObservableObject
 
     public Action<Limit>? EditRequested { get; set; }
 
-    public bool IsMultipleTestSelected => string.Equals(SelectedTest?.StepType, "MULTIPLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsMultipleTestSelected => SelectedTest?.StepTypeValue == StepType.Multiple;
 
-    public bool IsSingleTestSelected => string.Equals(SelectedTest?.StepType, "SINGLE", StringComparison.OrdinalIgnoreCase);
+    public bool IsSingleTestSelected => SelectedTest?.StepTypeValue == StepType.Single;
 
     public void RefreshSelectedLimitView()
     {
@@ -82,7 +82,7 @@ public sealed partial class FindTabViewModel : ObservableObject
         }
 
         ReplaceWith(TestsInSelectedSequence, value.StepList);
-        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SeqName}'.";
+        StatusMessage = $"Loaded {TestsInSelectedSequence.Count} test(s) from sequence '{value.SequenceName}'.";
     }
 
     partial void OnSelectedTestChanged(Step? value)
@@ -150,7 +150,7 @@ public sealed partial class FindTabViewModel : ObservableObject
         var query = SequenceSearchText.Trim();
         var matches = string.IsNullOrWhiteSpace(query)
             ? _sharedFileContext.LoadedDocument.Sequences
-            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SeqName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            : _sharedFileContext.LoadedDocument.Sequences.Where(s => s.SequenceName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 
         ResetAllFindState();
         ReplaceWith(MatchingSequences, matches);

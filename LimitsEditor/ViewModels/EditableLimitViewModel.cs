@@ -9,7 +9,7 @@ public sealed partial class EditableLimitViewModel : ObservableObject
     private string multipleStepNameCheck = string.Empty;
 
     [ObservableProperty]
-    private string limitType = string.Empty;
+    private LimitType limitType = LimitType.Comparison;
 
     [ObservableProperty]
     private string comparisonType = string.Empty;
@@ -34,7 +34,7 @@ public sealed partial class EditableLimitViewModel : ObservableObject
         return new EditableLimitViewModel
         {
             MultipleStepNameCheck = source.MultipleStepNameCheck,
-            LimitType = source.LimitType,
+            LimitType = source.LimitTypeValue,
             ComparisonType = source.ComparisonType,
             ThresholdType = source.ThresholdType,
             ExpectedRes = source.ExpectedRes,
@@ -49,7 +49,7 @@ public sealed partial class EditableLimitViewModel : ObservableObject
         return new Limit
         {
             MultipleStepNameCheck = MultipleStepNameCheck,
-            LimitType = LimitType,
+            LimitType = LimitTypeSerialization.ToSerialized(LimitType),
             ComparisonType = ComparisonType,
             ThresholdType = ThresholdType,
             ExpectedRes = ExpectedRes,
@@ -62,7 +62,7 @@ public sealed partial class EditableLimitViewModel : ObservableObject
     public void ApplyTo(Limit destination)
     {
         destination.MultipleStepNameCheck = MultipleStepNameCheck;
-        destination.LimitType = LimitType;
+        destination.LimitType = LimitTypeSerialization.ToSerialized(LimitType);
         destination.ComparisonType = ComparisonType;
         destination.ThresholdType = ThresholdType;
         destination.ExpectedRes = ExpectedRes;
@@ -74,7 +74,7 @@ public sealed partial class EditableLimitViewModel : ObservableObject
     public bool HasChangesComparedTo(Limit target)
     {
         return MultipleStepNameCheck != target.MultipleStepNameCheck ||
-               LimitType != target.LimitType ||
+               LimitType != target.LimitTypeValue ||
                ComparisonType != target.ComparisonType ||
                ThresholdType != target.ThresholdType ||
                ExpectedRes != target.ExpectedRes ||

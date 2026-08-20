@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LimitsEditor.Models;
@@ -26,9 +25,6 @@ public sealed partial class AddTabViewModel : ObservableObject
 
     [ObservableProperty]
     private StepType stepType = StepType.Single;
-
-    [ObservableProperty]
-    private bool overwriteExisting;
 
     public AddTabViewModel(
         SharedFileContext sharedFileContext,
@@ -112,8 +108,7 @@ public sealed partial class AddTabViewModel : ObservableObject
                 StepName = StepName,
                 StepType = StepTypeSerialization.ToSerialized(StepType),
                 LimitList = Limits.ToList()
-            },
-            OverwriteIfExists = OverwriteExisting
+            }
         };
 
         var validation = _testItemValidator.Validate(request);
@@ -126,30 +121,6 @@ public sealed partial class AddTabViewModel : ObservableObject
         var document = _sharedFileContext.LoadedDocument;
 
         var upsertResult = _jsonUpsertService.Upsert(document, request);
-        if (upsertResult.RequiresOverwriteConfirmation)
-        {
-            var overwrite = MessageBox.Show(
-                upsertResult.Message + " Overwrite?",
-                "Confirm overwrite",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (overwrite != MessageBoxResult.Yes)
-            {
-                StatusMessage = "Overwrite canceled by user.";
-                return;
-            }
-
-            request = new UpsertTestRequest
-            {
-                SequenceName = request.SequenceName,
-                Step = request.Step,
-                OverwriteIfExists = true
-            };
-
-            upsertResult = _jsonUpsertService.Upsert(document, request);
-        }
-
         if (upsertResult.Status != OperationStatus.Success)
         {
             StatusMessage = upsertResult.Message;

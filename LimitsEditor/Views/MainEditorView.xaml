@@ -251,6 +251,7 @@
                     <ListBox ItemsSource="{Binding TestNavigationItems}"
                              BorderThickness="0"
                              ItemContainerStyle="{StaticResource TestNavigationListBoxItemStyle}"
+                             PreviewMouseLeftButtonDown="TestsListBox_OnPreviewMouseLeftButtonDown"
                              SelectedItem="{Binding SelectedRootTestItem, Mode=TwoWay}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -284,6 +285,7 @@
                                              BorderThickness="0"
                                              ItemContainerStyle="{StaticResource TestNavigationListBoxItemStyle}"
                                              ItemsSource="{Binding SubTests}"
+                                             PreviewMouseLeftButtonDown="TestsListBox_OnPreviewMouseLeftButtonDown"
                                              SelectedItem="{Binding DataContext.SelectedTestItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
                                              Visibility="{Binding IsBranchExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <ListBox.ItemTemplate>

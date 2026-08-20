@@ -97,7 +97,12 @@ public sealed class AddTestCreationValidator : IAddTestCreationValidator
             });
         }
 
-        if (string.IsNullOrWhiteSpace(limit.ExpectedRes) && !limit.Low.HasValue && !limit.High.HasValue)
+        var isNoComparison = string.Equals(
+            limit.ComparisonType,
+            ComparisonTypeOption.NoComparisonCode,
+            StringComparison.Ordinal);
+
+        if (!isNoComparison && string.IsNullOrWhiteSpace(limit.ExpectedRes) && !limit.Low.HasValue && !limit.High.HasValue)
         {
             result.AddIssue(new ValidationIssue
             {

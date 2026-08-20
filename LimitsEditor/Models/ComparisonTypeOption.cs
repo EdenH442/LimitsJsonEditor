@@ -2,6 +2,8 @@ namespace LimitsEditor.Models;
 
 public sealed record ComparisonTypeOption(string Code, string DisplayText)
 {
+    public const string NoComparisonCode = "LOG";
+
     public static IReadOnlyList<ComparisonTypeOption> All { get; } = new[]
     {
         new ComparisonTypeOption("EQ", "EQ (==)"),
@@ -19,7 +21,7 @@ public sealed record ComparisonTypeOption(string Code, string DisplayText)
         new ComparisonTypeOption("LEGE", "LEGE (<=>=)"),
         new ComparisonTypeOption("LEGT", "LEGT (<=>)"),
         new ComparisonTypeOption("LTGE", "LTGE (<>=)"),
-        new ComparisonTypeOption("LOG", "LOG (No Comparison)")
+        new ComparisonTypeOption(NoComparisonCode, "LOG (No Comparison)")
     };
 
     public static bool IsValidCode(string? value) =>

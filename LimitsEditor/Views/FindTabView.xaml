@@ -83,6 +83,7 @@
                     <ListBox Grid.Row="2"
                              ItemsSource="{Binding TestsInSelectedSequence}"
                              DisplayMemberPath="StepName"
+                             PreviewMouseLeftButtonDown="TestsListBox_OnPreviewMouseLeftButtonDown"
                              SelectedItem="{Binding SelectedTest}" />
                 </Grid>
             </materialDesign:Card>

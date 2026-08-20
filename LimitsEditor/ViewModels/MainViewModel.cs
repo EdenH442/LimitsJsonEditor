@@ -109,6 +109,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (loadResult.Status != OperationStatus.Success || loadResult.Document is null)
         {
             StatusMessage = loadResult.Message;
+            MessageBox.Show(loadResult.Message, "Open JSON File", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -181,8 +182,35 @@ public sealed partial class MainViewModel : ObservableObject
         var loadResult = await _jsonFileService.LoadAsync(SelectedFilePath);
         if (loadResult.Status == OperationStatus.Success && loadResult.Document is not null)
         {
-            _sharedFileContext.LoadedDocument = loadResult.Document;
-            MainEditor.IsDocumentDirty = false;
+            var structureValidation = _fileValidationService.ValidateDocumentStructure(loadResult.Document);
+            if (!structureValidation.IsValid)
+            {
+                var details = string.Join(
+                    Environment.NewLine,
+                    structureValidation.Issues.Select(issue => $"• {issue.Target}: {issue.Message}"));
+
+                return new JsonLoadResult
+                {
+                    Status = OperationStatus.ValidationFailed,
+                    Document = loadResult.Document,
+                    Validation = structureValidation,
+                    Message = $"The JSON file contains invalid data:{Environment.NewLine}{details}"
+                };
+            }
+
+            try
+            {
+                _sharedFileContext.LoadedDocument = loadResult.Document;
+                MainEditor.IsDocumentDirty = false;
+            }
+            catch (Exception ex)
+            {
+                return new JsonLoadResult
+                {
+                    Status = OperationStatus.Failed,
+                    Message = $"The JSON file was read, but the editor could not display it: {ex.Message}"
+                };
+            }
         }
 
         return loadResult;
